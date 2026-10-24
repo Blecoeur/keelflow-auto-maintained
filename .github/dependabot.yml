@@ -5,9 +5,9 @@
 # - one PR per dependency (no giant grouped updates)
 # - ordinary MAJOR updates ignored: migrate majors only through the
 #   audit circuit, with verifiable justification
-# - github-actions updates are infrastructure changes: they always fail
-#   the maintenance-policy check by design (protected paths) and require
-#   human review.
+# - github-actions updates are infrastructure changes: the policy check
+#   surfaces them as needs-human (green, never auto-merged); they are
+#   merged by human decision only.
 
 version: 2
 updates:
