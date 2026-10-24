@@ -1,0 +1,73 @@
+schema_version: 1
+
+project:
+  name: keelflow-auto-maintained
+  ecosystem: node-pnpm
+  base_branch: main
+
+updates:
+  schedule: weekly
+  cooldown_days: 3
+  max_open_prs: 10
+  grouping: individual
+  allow_minor: true
+  allow_patch: true
+  major:
+    default: defer
+    enable_maintenance_audit: true
+    migrate_if_eol_verified: false
+    migrate_if_security_unpatched: true
+
+validation:
+  install: pnpm install --frozen-lockfile
+  build: pnpm build
+  typecheck: null
+  test: pnpm test
+  smoke: null
+  # Display names of the required checks enforced by branch protection.
+  # The repository keeps its own CI (lint/build/unit tests + five e2e
+  # variants + CodeQL); the framework adds maintenance-policy on top.
+  required_checks:
+    - 'Lint, build and unit tests'
+    - 'Sign-in and API keys (SQLite)'
+    - 'Sign-in and API keys (Postgres)'
+    - 'Sign-in and API keys (MySQL)'
+    - 'Sign-in and API keys (MariaDB)'
+    - 'Upgrade from Flowise 3.1.4 (SQLite)'
+    - 'analyze'
+    - 'maintenance-policy'
+
+repair:
+  provider: mistral-workflows
+  enabled: false # enabled only when the Phase 3 circuit is deployed
+  max_attempts: 3
+  max_parallel_per_repo: 1
+  max_changed_application_files: 10
+  preserve_public_api: true
+  forbidden_paths:
+    - .github/**
+    - .maintenance.yml
+    - CODEOWNERS
+    - '**/*.test.*'
+    - '**/*.spec.*'
+    - '**/__tests__/**'
+    - '**/__snapshots__/**'
+    - '**/*.snap'
+    - test/** # e2e suites (test/auth-flow.mjs and friends)
+  # Application paths an AI repair may modify. Empty until the Phase 3
+  # circuit is reviewed: all application-code repairs are blocked.
+  allowed_ai_paths: []
+
+merge:
+  mode: github-auto-merge
+  strategy: squash
+  allowed_authors:
+    - 'dependabot[bot]'
+  ai_authors: []
+
+release:
+  schedule: weekly-sunday
+  versioning: source-aware
+  initial_major: 3
+  publish_github_release: true
+  publish_ghcr: false # Phase 2

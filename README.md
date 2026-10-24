@@ -15,6 +15,19 @@
 
 <p align="center">English · <a href="README.ru.md">Русский</a></p>
 
+> [!WARNING]
+> **Experimental, automatically maintained distribution.** This fork of
+> [Keelflow](https://github.com/Perruer/keelflow) is maintained by the
+> [autonomous-dependency-maintainer](https://github.com/Blecoeur/autonomous-dependency-maintainer)
+> framework: dependencies are updated automatically (weekly Dependabot scan,
+> 3-day cooldown, eligible pull requests auto-merged when all required checks
+> pass), and later phases may include AI-generated compatibility fixes.
+> All changes are checked by an automated CI pipeline, but passing tests do
+> not guarantee functional compatibility, reliability, or security. There is
+> **no human review requirement** for eligible automated updates. No warranty
+> or support commitment is provided. Production users should pin versions,
+> keep backups and independently validate releases.
+
 ---
 
 Flowise was archived on August 13, 2026 and reached end of life on August 31. Security advisories kept being published after that without fixes, and thousands of instances are still reachable from the internet.
