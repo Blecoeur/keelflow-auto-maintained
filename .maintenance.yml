@@ -35,7 +35,7 @@ validation:
     - 'Sign-in and API keys (MariaDB)'
     - 'Upgrade from Flowise 3.1.4 (SQLite)'
     - 'analyze'
-    - 'maintenance-policy'
+    - 'maintenance-policy / maintenance-policy'
 
 repair:
   provider: mistral-workflows
