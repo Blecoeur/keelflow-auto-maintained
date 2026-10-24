@@ -1,0 +1,29 @@
+# Weekly maintenance release for the Keelflow demonstrator.
+#
+# Dependabot works from Monday; the release runs Sunday 08:00 UTC so updates
+# have the week to be validated. Serialized and idempotent: concurrent runs
+# queue, and a rerun without new merges (or with an existing target tag)
+# publishes nothing.
+
+name: Weekly maintenance release
+
+on:
+    schedule:
+        - cron: '0 08 * * 0' # Sunday 08:00 UTC
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: maintenance-release
+    cancel-in-progress: false
+
+jobs:
+    release:
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/release.yml@v0.1.3
+        with:
+            framework-repository: Blecoeur/autonomous-dependency-maintainer
+            framework-ref: v0.1.3
+            config-path: .maintenance.yml
+            base-branch: main
