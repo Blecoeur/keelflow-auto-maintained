@@ -86,7 +86,7 @@
         "@azure/storage-blob": "^12.29.0",
         "@brave/brave-search-mcp-server": "2.0.80",
         "@datastax/astra-db-ts": "1.5.0",
-        "@dqbd/tiktoken": "^1.0.21",
+        "@dqbd/tiktoken": "^1.0.22",
         "@e2b/code-interpreter": "^1.5.1",
         "@elastic/elasticsearch": "^8.16.0",
         "@elevenlabs/elevenlabs-js": "^2.8.0",
