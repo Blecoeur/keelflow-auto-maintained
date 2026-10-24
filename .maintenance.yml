@@ -25,12 +25,16 @@ validation:
   test: pnpm test
   smoke: null
   # Display names of the required checks enforced by branch protection.
-  # The repository keeps its own CI (Lint/build/unit tests + e2e auth flows
-  # on SQLite and Postgres); the framework adds maintenance-policy on top.
+  # The repository keeps its own CI (lint/build/unit tests + five e2e
+  # variants + CodeQL); the framework adds maintenance-policy on top.
   required_checks:
     - 'Lint, build and unit tests'
     - 'Sign-in and API keys (SQLite)'
     - 'Sign-in and API keys (Postgres)'
+    - 'Sign-in and API keys (MySQL)'
+    - 'Sign-in and API keys (MariaDB)'
+    - 'Upgrade from Flowise 3.1.4 (SQLite)'
+    - 'analyze'
     - 'maintenance-policy'
 
 repair:
