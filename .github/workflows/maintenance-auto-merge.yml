@@ -1,0 +1,30 @@
+# Maintenance auto-merge for the Keelflow demonstrator.
+#
+# pull_request_target runs in the trusted base-repository context (write
+# token available even for Dependabot PRs) and never checks out PR code.
+# The reusable workflow only verifies provenance and enables GitHub's
+# native auto-merge; the merge itself is authorized exclusively by the
+# required checks configured on main.
+
+name: Maintenance auto-merge
+
+on:
+    pull_request_target:
+        types: [opened, reopened, synchronize]
+
+permissions:
+    contents: write
+    pull-requests: write
+
+concurrency:
+    group: maintenance-auto-merge-${{ github.event.pull_request.number }}
+    cancel-in-progress: false
+
+jobs:
+    auto-merge:
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.1.0
+        with:
+            allowed-authors: 'dependabot[bot]'
+            base-branch: main
+            strategy: squash
+            github-token: ${{ github.token }}

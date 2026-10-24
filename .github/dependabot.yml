@@ -1,27 +1,39 @@
+# Dependabot configuration for the Keelflow demonstrator.
+#
+# Policy (per the autonomous-dependency-maintainer framework):
+# - weekly scan on Monday, explicit 3-day cooldown
+# - one PR per dependency (no giant grouped updates)
+# - ordinary MAJOR updates ignored: migrate majors only through the
+#   audit circuit, with verifiable justification
+# - github-actions updates are infrastructure changes: they always fail
+#   the maintenance-policy check by design (protected paths) and require
+#   human review.
+
 version: 2
 updates:
-    - package-ecosystem: github-actions
-      directory: /
-      schedule:
-          interval: weekly
-      groups:
-          actions:
-              patterns: ['*']
-
     - package-ecosystem: npm
-      directory: /
+      directory: '/'
       schedule:
           interval: weekly
-      open-pull-requests-limit: 5
-      groups:
-          security:
-              applies-to: security-updates
-              patterns: ['*']
-          minor-and-patch:
-              applies-to: version-updates
-              update-types: [minor, patch]
-              patterns: ['*']
+          day: monday
+      cooldown:
+          default-days: 3
+      open-pull-requests-limit: 10
+      labels:
+          - dependencies
       ignore:
-          # major versions of LangChain, the AI SDKs and React change APIs; update them by hand
+          # major versions of LangChain, the AI SDKs and React change APIs;
+          # majors are deferred by policy in any case
           - dependency-name: '*'
             update-types: ['version-update:semver-major']
+
+    - package-ecosystem: github-actions
+      directory: '/'
+      schedule:
+          interval: weekly
+          day: monday
+      cooldown:
+          default-days: 3
+      labels:
+          - dependencies
+          - infrastructure
