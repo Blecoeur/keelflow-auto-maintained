@@ -22,11 +22,10 @@ concurrency:
 
 jobs:
     auto-merge:
-        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.1.6
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.1.7
         with:
             # TEST ONLY (dogfood 2026-10-24): includes Blecoeur until the
             # test dependency PRs are merged, then reverts to dependabot only.
             allowed-authors: 'dependabot[bot],Blecoeur'
             base-branch: main
             strategy: squash
-            github-token: ${{ github.token }}
