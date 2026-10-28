@@ -38,8 +38,8 @@ validation:
     - 'maintenance-policy / maintenance-policy'
 
 repair:
-  provider: mistral-workflows
-  enabled: false # enabled only when the Phase 3 circuit is deployed
+  provider: vibe
+  enabled: true # Phase 3 repair circuit wired, see maintenance-repair.yml
   max_attempts: 3
   max_parallel_per_repo: 1
   max_changed_application_files: 10
@@ -54,8 +54,10 @@ repair:
     - '**/__snapshots__/**'
     - '**/*.snap'
     - test/** # e2e suites (test/auth-flow.mjs and friends)
-  # Application paths an AI repair may modify. Empty until the Phase 3
-  # circuit is reviewed: all application-code repairs are blocked.
+  # Application paths an AI repair may modify. Empty: application-code
+  # repairs are blocked; only dependency files (package.json,
+  # pnpm-lock.yaml and workspace manifests) may change. Extend only
+  # after review.
   allowed_ai_paths: []
 
 merge:

@@ -1,0 +1,70 @@
+# Repair request wrapper for the Keelflow demonstrator.
+#
+# Listens to completed runs of the repository's own CI workflow and calls
+# the framework's repair orchestrator. Every deterministic guard (eligible
+# dependency PR, expected workflow, exact head SHA, reproducible failure,
+# no repair in progress, attempt budget) is evaluated inside the trusted
+# workflow; the repair itself runs the Mistral vibe CLI on an Actions
+# runner, and this repository's own code only ever executes inside the
+# repair workspace with a scrubbed environment.
+#
+# Wiring notes:
+# - .maintenance.yml must carry repair.enabled: true and repair.provider:
+#   vibe (the policy engine blocks every repair otherwise).
+# - Repository secret MISTRAL_API_KEY is required to run repairs; without
+#   it the repair job reports eligibility and blocks explicitly (visible
+#   notice, never a silent skip). GITHUB_READ_TOKEN is optional: this
+#   repository is public and the repair clone falls back to anonymous.
+# - The framework is pinned to the Phase 3 commit that introduced the
+#   vibe-CLI repair circuit (cd92513). Move to the vX.Y.Z tag once the
+#   framework cuts one.
+
+name: Maintenance repair request
+
+on:
+    workflow_run:
+        # The repository's own CI workflow (main.yml).
+        workflows: ['CI']
+        types: [completed]
+    workflow_dispatch:
+        inputs:
+            pr-number:
+                description: 'PR to repair (manual trigger for testing)'
+                type: number
+                required: true
+            head-sha:
+                description: 'Head SHA of the failing PR'
+                type: string
+                required: true
+            run-id:
+                description: 'ID of the failed CI run'
+                type: number
+                required: true
+
+permissions:
+    contents: read
+    pull-requests: read
+
+concurrency:
+    group: maintenance-repair
+    cancel-in-progress: false
+
+jobs:
+    repair-request:
+        if: >-
+            github.event_name == 'workflow_dispatch' ||
+            (github.event.workflow_run.conclusion == 'failure' &&
+             github.event.workflow_run.event == 'pull_request' &&
+             github.event.workflow_run.pull_requests[0] != null)
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/repair-request.yml@cd925131333d6f3f8f018a2801dad95c44da99d3
+        secrets:
+            MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+            GITHUB_READ_TOKEN: ${{ secrets.GITHUB_READ_TOKEN }}
+        with:
+            pr-number: ${{ github.event_name == 'workflow_dispatch' && inputs.pr-number || github.event.workflow_run.pull_requests[0].number }}
+            base-ref: 'main'
+            head-sha: ${{ github.event_name == 'workflow_dispatch' && inputs.head-sha || github.event.workflow_run.head_sha }}
+            run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.run-id || github.event.workflow_run.id }}
+            expected-workflow-name: 'CI'
+            framework-repository: Blecoeur/autonomous-dependency-maintainer
+            framework-ref: cd925131333d6f3f8f018a2801dad95c44da99d3
