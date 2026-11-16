@@ -22,8 +22,11 @@ concurrency:
 
 jobs:
     auto-merge:
-        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.1.8
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.2.4
         with:
             allowed-authors: 'dependabot[bot]'
             base-branch: main
             strategy: squash
+            # Match the pnpm version pinned in main.yml so the repaired
+            # lockfile stays byte-compatible with CI's frozen install.
+            pnpm-version: 10.26.0
