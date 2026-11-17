@@ -22,10 +22,11 @@ concurrency:
 
 jobs:
     auto-merge:
-        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.1.7
+        uses: Blecoeur/autonomous-dependency-maintainer/.github/workflows/auto-merge.yml@v0.2.6
         with:
-            # TEST ONLY (dogfood 2026-10-24): includes Blecoeur until the
-            # test dependency PRs are merged, then reverts to dependabot only.
-            allowed-authors: 'dependabot[bot],Blecoeur'
+            allowed-authors: 'dependabot[bot]'
             base-branch: main
             strategy: squash
+            # Match the pnpm version pinned in main.yml so the repaired
+            # lockfile stays byte-compatible with CI's frozen install.
+            pnpm-version: 10.26.0
