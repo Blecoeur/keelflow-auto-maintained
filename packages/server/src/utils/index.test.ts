@@ -36,6 +36,12 @@ import {
     transformToCredentialEntity,
     getMemorySessionId,
     findMemoryNode,
+    getGlobalVariable,
+    getVariableValue,
+    resolveVariables,
+    clearSessionMemory,
+    getSessionChatHistory,
+    buildFlow,
     getAllValuesFromJson,
     getTelemetryFlowObj,
     getAppVersion,
@@ -53,16 +59,72 @@ import {
 
 // keelflow-components resolves to its TS sources, which pull in jsdom and
 // ESM-only deps that Jest (CJS) cannot parse. Mock the handful of exports
-// utils/index.ts uses, like the other server test files do.
-jest.mock('keelflow-components', () => ({
-    getInputVariables: (value: any): string[] =>
-        typeof value === 'string' ? [...value.matchAll(/\{\{([^{}]+)\}\}/g)].map((m) => m[1]) : [],
-    getDataDir: () => process.env.KEELFLOW_HOME || require('path').join(require('os').homedir(), '.keelflow'),
-    getEncryptionKeyPath: () => require('path').join(require('os').tmpdir(), 'encryption.key'),
-    convertChatHistoryToText: jest.fn(),
-    handleEscapeCharacters: (v: any) => v,
-    StorageProviderFactory: { getProvider: () => ({ getMulterStorage: () => ({}) }) }
-}))
+// utils/index.ts uses, like the other server test files do. handleEscapeCharacters
+// and convertChatHistoryToText replicate the real implementations so variable
+// resolution can be tested faithfully.
+jest.mock('keelflow-components', () => {
+    const jsonEscapeCharacters = [
+        { escape: '"', value: 'FLOWISE_DOUBLE_QUOTE' },
+        { escape: '\n', value: 'FLOWISE_NEWLINE' },
+        { escape: '\b', value: 'FLOWISE_BACKSPACE' },
+        { escape: '\f', value: 'FLOWISE_FORM_FEED' },
+        { escape: '\r', value: 'FLOWISE_CARRIAGE_RETURN' },
+        { escape: '\t', value: 'FLOWISE_TAB' },
+        { escape: '\\', value: 'FLOWISE_BACKSLASH' }
+    ]
+    const handleEscapesJSONParse = (input: string, reverse: boolean): string => {
+        for (const el of jsonEscapeCharacters) {
+            input = reverse ? input.replaceAll(el.value, el.escape) : input.replaceAll(el.escape, el.value)
+        }
+        return input
+    }
+    const iterateEscapesJSONParse = (input: any, reverse: boolean): any => {
+        for (const key in input) {
+            const t = typeof input[key]
+            if (t === 'string') input[key] = handleEscapesJSONParse(input[key], reverse)
+            else if (t === 'object') input[key] = iterateEscapesJSONParse(input[key], reverse)
+        }
+        return input
+    }
+    return {
+        getInputVariables: (value: any): string[] =>
+            typeof value === 'string' ? [...value.matchAll(/\{\{([^{}]+)\}\}/g)].map((m) => m[1]) : [],
+        handleEscapeCharacters: (input: any, reverse: boolean): any => {
+            const t = typeof input
+            if (t === 'string') return handleEscapesJSONParse(input, reverse)
+            if (t === 'object') return iterateEscapesJSONParse(input, reverse)
+            return input
+        },
+        convertChatHistoryToText: (chatHistory: any[] = []): string =>
+            chatHistory
+                .map((m) => {
+                    if (!m) return ''
+                    const content = 'message' in m ? m.message : m.content
+                    if (!content || content.trim() === '') return ''
+                    const type = 'type' in m ? m.type : m.role
+                    if (type === 'apiMessage' || type === 'assistant') return `Assistant: ${content}`
+                    if (type === 'userMessage' || type === 'user') return `Human: ${content}`
+                    return `${content}`
+                })
+                .filter((m) => m !== '')
+                .join('\n'),
+        getDataDir: () => process.env.KEELFLOW_HOME || require('path').join(require('os').homedir(), '.keelflow'),
+        getEncryptionKeyPath: () => process.env.KEELFLOW_TEST_KEY_PATH || require('path').join(require('os').tmpdir(), 'encryption.key'),
+        StorageProviderFactory: { getProvider: () => ({ getMulterStorage: () => ({}) }) }
+    }
+})
+
+// Mock the AWS SDK so the SECRETKEY_STORAGE_TYPE=aws branches can be exercised
+// without network access. The send behavior is controlled per test via __mockSend.
+jest.mock('@aws-sdk/client-secrets-manager', () => {
+    const mockSend = jest.fn()
+    return {
+        SecretsManagerClient: jest.fn().mockImplementation(() => ({ send: mockSend })),
+        GetSecretValueCommand: jest.fn().mockImplementation((input: any) => ({ input })),
+        CreateSecretCommand: jest.fn().mockImplementation((input: any) => ({ input })),
+        __mockSend: mockSend
+    }
+})
 
 jest.mock('./logger', () => ({
     __esModule: true,
@@ -847,5 +909,495 @@ describe('path helpers', () => {
             if (saved === undefined) delete process.env.SECRETKEY_PATH
             else process.env.SECRETKEY_PATH = saved
         }
+    })
+})
+
+describe('getGlobalVariable', () => {
+    it('builds a vars object from static variables', async () => {
+        const vars = await getGlobalVariable(undefined, [{ name: 'a', value: '1', type: 'static' } as any])
+        expect(vars).toEqual({ a: '1' })
+    })
+
+    it('reads runtime variables from process.env', async () => {
+        process.env.KEELFLOW_TEST_RUNTIME_VAR = 'rt-value'
+        try {
+            const vars = await getGlobalVariable(undefined, [
+                { name: 'KEELFLOW_TEST_RUNTIME_VAR', value: 'ignored', type: 'runtime' } as any
+            ])
+            expect(vars).toEqual({ KEELFLOW_TEST_RUNTIME_VAR: 'rt-value' })
+        } finally {
+            delete process.env.KEELFLOW_TEST_RUNTIME_VAR
+        }
+    })
+
+    it('returns an empty string for a missing runtime env var', async () => {
+        delete process.env.KEELFLOW_MISSING_VAR
+        const vars = await getGlobalVariable(undefined, [{ name: 'KEELFLOW_MISSING_VAR', value: 'x', type: 'runtime' } as any])
+        expect(vars).toEqual({ KEELFLOW_MISSING_VAR: '' })
+    })
+
+    it('applies enabled var overrides and adds unknown vars', async () => {
+        const available: any[] = [{ name: 'a', value: '1', type: 'static' }]
+        const vars = await getGlobalVariable({ vars: { a: 'overridden', b: 'new' } }, available, [
+            { name: 'a', enabled: true },
+            { name: 'b', enabled: true }
+        ] as any)
+        expect(vars).toEqual({ a: 'overridden', b: 'new' })
+        expect(available[0].type).toBe('static')
+        expect(available[0].value).toBe('overridden')
+    })
+
+    it('skips overrides that are not enabled', async () => {
+        const vars = await getGlobalVariable({ vars: { a: 'nope' } }, [{ name: 'a', value: '1', type: 'static' } as any], [
+            { name: 'a', enabled: false }
+        ] as any)
+        expect(vars).toEqual({ a: '1' })
+    })
+})
+
+describe('getVariableValue', () => {
+    it('returns plain strings unchanged', async () => {
+        await expect(getVariableValue('hello', [], '', [], false)).resolves.toBe('hello')
+    })
+
+    it('round-trips object params through JSON', async () => {
+        await expect(getVariableValue({ a: 1 }, [], '', [], false)).resolves.toEqual({ a: 1 })
+    })
+
+    it('resolves {{question}} when the param accepts variables, escaping special chars', async () => {
+        await expect(getVariableValue('Q: {{question}}', [], 'what?\nnow', [], true)).resolves.toBe('Q: what?FLOWISE_NEWLINEnow')
+    })
+
+    it('leaves {{question}} untouched when the param does not accept variables', async () => {
+        await expect(getVariableValue('Q: {{question}}', [], 'what?', [], false)).resolves.toBe('Q: {{question}}')
+    })
+
+    it('resolves {{chat_history}} from chat history', async () => {
+        const history: any = [
+            { role: 'userMessage', content: 'hi' },
+            { role: 'apiMessage', content: 'hello' }
+        ]
+        await expect(getVariableValue('{{chat_history}}', [], '', history, true)).resolves.toBe('Human: hiFLOWISE_NEWLINEAssistant: hello')
+    })
+
+    it('resolves {{file_attachment}} from uploaded files content', async () => {
+        await expect(getVariableValue('{{file_attachment}}', [], '', [], true, undefined, 'file-content')).resolves.toBe('file-content')
+    })
+
+    it('resolves $vars from available variables', async () => {
+        const vars: any = [{ name: 'apiKey', value: 'secret', type: 'static' }]
+        await expect(getVariableValue('key={{$vars.apiKey}}', [], '', [], false, undefined, undefined, vars)).resolves.toBe('key=secret')
+    })
+
+    it('applies $vars overrides from flowConfig', async () => {
+        const flowConfig: any = { vars: { apiKey: 'overridden' } }
+        const vars: any = [{ name: 'apiKey', value: 'secret', type: 'static' }]
+        await expect(
+            getVariableValue('{{$vars.apiKey}}', [], '', [], false, flowConfig, undefined, vars, [{ name: 'apiKey', enabled: true }] as any)
+        ).resolves.toBe('overridden')
+    })
+
+    it('resolves $flow paths from flowConfig', async () => {
+        await expect(getVariableValue('id={{$flow.chatflowid}}', [], '', [], false, { chatflowid: 'cf-1' })).resolves.toBe('id=cf-1')
+    })
+
+    it('resolves node instance references', async () => {
+        const nodes = [node('n1', { instance: 'hello' })]
+        await expect(getVariableValue('{{n1.data.instance}}', nodes, '', [], false)).resolves.toBe('hello')
+    })
+
+    it('substitutes node instance references inside a larger string when accepted', async () => {
+        const nodes = [node('n1', { instance: 'world' })]
+        await expect(getVariableValue('hello {{n1.data.instance}}!', nodes, '', [], true)).resolves.toBe('hello world!')
+    })
+
+    it('resolves nested keys of object instances', async () => {
+        const nodes = [node('n1', { instance: { key: 'nested-value' } })]
+        await expect(getVariableValue('{{n1.data.instance.key}}', nodes, '', [], false)).resolves.toBe('nested-value')
+    })
+
+    it('parses JSON-string instances before resolving nested keys', async () => {
+        const nodes = [node('n1', { instance: '{"key":"json-value"}' })]
+        await expect(getVariableValue('{{n1.data.instance.key}}', nodes, '', [], false)).resolves.toBe('json-value')
+    })
+
+    it('reduces agentflow instances to their id when accepted', async () => {
+        const nodes = [node('n1', { instance: { predecessorAgents: ['x'], id: 'ag-1', other: 1 } })]
+        await expect(getVariableValue('agent: {{n1.data.instance}}', nodes, '', [], true)).resolves.toBe('agent: {\\"id\\":\\"ag-1\\"}')
+    })
+})
+
+describe('resolveVariables', () => {
+    it('resolves variables in node inputs, including array elements', async () => {
+        const nodes = [node('n1', { instance: 'world' })]
+        const nodeData: any = {
+            id: 'n2',
+            inputParams: [
+                { name: 'prompt', acceptVariable: true },
+                { name: 'list', acceptVariable: false }
+            ],
+            inputs: { prompt: 'hello {{n1.data.instance}}', list: ['{{n1.data.instance}}', 'plain'] }
+        }
+        const result: any = await resolveVariables(nodeData, nodes, 'q', [])
+        expect(result.inputs.prompt).toBe('hello world')
+        expect(result.inputs.list).toEqual(['world', 'plain'])
+    })
+
+    it('does not mutate the original node data', async () => {
+        const nodes = [node('n1', { instance: 'world' })]
+        const nodeData: any = {
+            id: 'n2',
+            inputParams: [{ name: 'prompt', acceptVariable: true }],
+            inputs: { prompt: '{{n1.data.instance}}' }
+        }
+        await resolveVariables(nodeData, nodes, 'q', [])
+        expect(nodeData.inputs.prompt).toBe('{{n1.data.instance}}')
+    })
+})
+
+describe('getEncryptionKey file fallback', () => {
+    const ENV_KEY = 'FLOWISE_SECRETKEY_OVERWRITE'
+    const KEY_PATH_ENV = 'KEELFLOW_TEST_KEY_PATH'
+    let tmpDir: string
+    let savedEnv: string | undefined
+    let savedKeyPath: string | undefined
+    let savedSecretPath: string | undefined
+
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'keelflow-key-'))
+        savedEnv = process.env[ENV_KEY]
+        delete process.env[ENV_KEY]
+        savedKeyPath = process.env[KEY_PATH_ENV]
+        process.env[KEY_PATH_ENV] = path.join(tmpDir, 'encryption.key')
+        savedSecretPath = process.env.SECRETKEY_PATH
+        process.env.SECRETKEY_PATH = tmpDir
+    })
+
+    afterEach(() => {
+        if (savedEnv === undefined) delete process.env[ENV_KEY]
+        else process.env[ENV_KEY] = savedEnv
+        if (savedKeyPath === undefined) delete process.env[KEY_PATH_ENV]
+        else process.env[KEY_PATH_ENV] = savedKeyPath
+        if (savedSecretPath === undefined) delete process.env.SECRETKEY_PATH
+        else process.env.SECRETKEY_PATH = savedSecretPath
+        fs.rmSync(tmpDir, { recursive: true, force: true })
+    })
+
+    it('reads the key from the key file when present', async () => {
+        fs.writeFileSync(path.join(tmpDir, 'encryption.key'), 'file-based-key')
+        await expect(getEncryptionKey()).resolves.toBe('file-based-key')
+    })
+
+    it('generates and persists a key when the key file is missing', async () => {
+        const key = await getEncryptionKey()
+        expect(Buffer.from(key, 'base64')).toHaveLength(24)
+        expect(fs.readFileSync(path.join(tmpDir, 'encryption.key'), 'utf8')).toBe(key)
+    })
+})
+
+describe('clearSessionMemory / getSessionChatHistory (node fixtures)', () => {
+    let tmpDir: string
+    let fixturePath: string
+
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'keelflow-node-'))
+        fixturePath = path.join(tmpDir, 'fakeMemory.js')
+        fs.writeFileSync(
+            fixturePath,
+            [
+                'class nodeClass {',
+                '    async init(data, prev, options) { this.data = data; return this }',
+                '    async clearChatMessages(...args) { (globalThis.__clearCalls = globalThis.__clearCalls || []).push(args[args.length - 1]) }',
+                '    async getChatMessages(sessionId, _, prepend) { return [{ role: "userMessage", content: "msg-" + sessionId }, ...(prepend || [])] }',
+                '}',
+                'module.exports = { nodeClass }'
+            ].join('\n')
+        )
+        ;(globalThis as any).__clearCalls = []
+    })
+
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true })
+        delete (globalThis as any).__clearCalls
+    })
+
+    const componentNodes = (): any => ({ fakeMemory: { filePath: fixturePath } })
+    const clearCalls = (): any[] => (globalThis as any).__clearCalls
+
+    it('clears memory by chatId and sets inputs.sessionId', async () => {
+        const memory = node('mem', { id: 'mem', name: 'fakeMemory', category: 'Memory', inputs: {} })
+        await clearSessionMemory([memory], componentNodes(), 'chat-1', {} as any)
+        expect(clearCalls()).toEqual(['chat-1'])
+        expect(memory.data.inputs.sessionId).toBe('chat-1')
+    })
+
+    it('sessionId takes priority over chatId', async () => {
+        const memory = node('mem', { id: 'mem', name: 'fakeMemory', category: 'Memory', inputs: {} })
+        await clearSessionMemory([memory], componentNodes(), 'chat-1', {} as any, undefined, 'session-9')
+        expect(clearCalls()).toEqual(['session-9'])
+    })
+
+    it('OpenAIAssistant nodes are cleared via threadId/chatId options', async () => {
+        const assistant = node('a', { id: 'a', name: 'fakeMemory', category: 'Agents', type: 'OpenAIAssistant', inputs: {} })
+        await clearSessionMemory([assistant], componentNodes(), 'chat-1', {} as any, undefined, 'thread-1')
+        expect(clearCalls()).toEqual([{ type: 'threadId', id: 'thread-1' }])
+        await clearSessionMemory([assistant], componentNodes(), 'chat-2', {} as any)
+        expect(clearCalls()).toEqual([
+            { type: 'threadId', id: 'thread-1' },
+            { type: 'chatId', id: 'chat-2' }
+        ])
+    })
+
+    it('skips nodes that are not memory/assistant, and honors the view-message-dialog filter', async () => {
+        const chain = node('c', { id: 'c', name: 'fakeMemory', category: 'Chains', inputs: {} })
+        await clearSessionMemory([chain], componentNodes(), 'chat-1', {} as any)
+        expect(clearCalls()).toEqual([])
+
+        const memory = node('mem', { id: 'mem', name: 'fakeMemory', category: 'Memory', label: 'Buffer Memory', inputs: {} })
+        await clearSessionMemory([memory], componentNodes(), 'chat-1', {} as any, undefined, undefined, 'Other Memory', 'true')
+        expect(clearCalls()).toEqual([])
+        await clearSessionMemory([memory], componentNodes(), 'chat-1', {} as any, undefined, undefined, 'Buffer Memory', 'true')
+        expect(clearCalls()).toEqual(['chat-1'])
+    })
+
+    it('getSessionChatHistory returns messages and rewrites the memory sessionId', async () => {
+        const memory = node('mem', { id: 'mem', name: 'fakeMemory', category: 'Memory', inputs: { sessionId: 'old' } })
+        const messages = await getSessionChatHistory('cf-1', 'sess-1', memory, componentNodes(), {} as any, {} as any, {} as any, [
+            { role: 'apiMessage', content: 'prepended' } as any
+        ])
+        expect(memory.data.inputs.sessionId).toBe('sess-1')
+        expect(messages).toEqual([
+            { role: 'userMessage', content: 'msg-sess-1' },
+            { role: 'apiMessage', content: 'prepended' }
+        ])
+    })
+})
+
+describe('AWS Secrets Manager mode', () => {
+    const ENV = 'SECRETKEY_STORAGE_TYPE'
+    let saved: string | undefined
+
+    beforeEach(() => {
+        saved = process.env[ENV]
+    })
+
+    afterEach(() => {
+        if (saved === undefined) delete process.env[ENV]
+        else process.env[ENV] = saved
+    })
+
+    // Re-import utils/index.ts with SECRETKEY_STORAGE_TYPE=aws so the module-level
+    // USE_AWS_SECRETS_MANAGER flag flips on; the AWS SDK is mocked above.
+    const loadWithAws = async () => {
+        jest.resetModules()
+        process.env[ENV] = 'aws'
+        const sdk = require('@aws-sdk/client-secrets-manager')
+        const mod = await import('./index')
+        return { mod, mockSend: sdk.__mockSend as jest.Mock }
+    }
+
+    it('getEncryptionKey reads from AWS and creates the secret on ResourceNotFound', async () => {
+        const { mod, mockSend } = await loadWithAws()
+        try {
+            mockSend.mockResolvedValue({ SecretString: 'aws-key' })
+            await expect(mod.getEncryptionKey()).resolves.toBe('aws-key')
+
+            const err: any = new Error('not found')
+            err.name = 'ResourceNotFoundException'
+            mockSend.mockRejectedValueOnce(err)
+            const key = await mod.getEncryptionKey()
+            expect(Buffer.from(key, 'base64')).toHaveLength(24)
+        } finally {
+            delete process.env[ENV]
+        }
+    })
+
+    it('decryptCredentialData fetches FlowiseCredential_ secrets from AWS', async () => {
+        const { mod, mockSend } = await loadWithAws()
+        try {
+            mockSend.mockResolvedValue({ SecretString: JSON.stringify({ apiKey: 'k' }) })
+            await expect(mod.decryptCredentialData('FlowiseCredential_abc')).resolves.toEqual({ apiKey: 'k' })
+        } finally {
+            delete process.env[ENV]
+        }
+    })
+
+    it('decryptCredentialData wraps AWS errors', async () => {
+        const { mod, mockSend } = await loadWithAws()
+        try {
+            const err: any = new Error('boom')
+            err.name = 'AccessDeniedException'
+            mockSend.mockRejectedValue(err)
+            await expect(mod.decryptCredentialData('FlowiseCredential_abc')).rejects.toThrow('Failed to decrypt credential data.')
+        } finally {
+            delete process.env[ENV]
+        }
+    })
+
+    it('getOrCreateStoredSecret reads from AWS and creates on miss with defaultValueForNew', async () => {
+        const { mod, mockSend } = await loadWithAws()
+        delete process.env.KEELFLOW_TEST_AWS_SECRET
+        try {
+            mockSend.mockResolvedValue({ SecretString: 'aws-secret' })
+            await expect(
+                mod.getOrCreateStoredSecret({ envKey: 'KEELFLOW_TEST_AWS_SECRET', fileName: 'x.txt', awsSecretIdSuffix: 'Test' })
+            ).resolves.toBe('aws-secret')
+
+            const err: any = new Error('not found')
+            err.name = 'ResourceNotFoundException'
+            mockSend.mockRejectedValueOnce(err)
+            await expect(
+                mod.getOrCreateStoredSecret({
+                    envKey: 'KEELFLOW_TEST_AWS_SECRET',
+                    fileName: 'issuer.txt',
+                    awsSecretIdSuffix: 'Issuer',
+                    defaultValueForNew: 'flowise'
+                })
+            ).resolves.toBe('flowise')
+        } finally {
+            delete process.env[ENV]
+            delete process.env.KEELFLOW_TEST_AWS_SECRET
+        }
+    })
+})
+
+describe('buildFlow', () => {
+    let tmpDir: string
+    let fixturePath: string
+    let failingFixturePath: string
+
+    const FIXTURE = [
+        'class nodeClass {',
+        '    constructor() {',
+        '        this.vectorStoreMethods = {',
+        '            upsert: async (data, options) => {',
+        '                (globalThis.__upsertCalls = globalThis.__upsertCalls || []).push({ data, options })',
+        "                return 'upsert-result'",
+        '            }',
+        '        }',
+        '    }',
+        '    async init(data, question, options) {',
+        '        ;(globalThis.__initCalls = globalThis.__initCalls || []).push({ data, question, options })',
+        "        if (data.name === 'setVariable') return { dynamicVariables: { foo: 'bar' }, output: 'sv-output' }",
+        "        return { output: 'result-' + data.id }",
+        '    }',
+        '}',
+        'module.exports = { nodeClass }'
+    ].join('\n')
+
+    const FAILING_FIXTURE = [
+        'class nodeClass {',
+        '    async init() { throw new Error("init exploded") }',
+        '}',
+        'module.exports = { nodeClass }'
+    ].join('\n')
+
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'keelflow-build-'))
+        fixturePath = path.join(tmpDir, 'fakeNode.js')
+        failingFixturePath = path.join(tmpDir, 'failNode.js')
+        fs.writeFileSync(fixturePath, FIXTURE)
+        fs.writeFileSync(failingFixturePath, FAILING_FIXTURE)
+        ;(globalThis as any).__initCalls = []
+        ;(globalThis as any).__upsertCalls = []
+    })
+
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true })
+        delete (globalThis as any).__initCalls
+        delete (globalThis as any).__upsertCalls
+    })
+
+    const initCalls = (): any[] => (globalThis as any).__initCalls
+    const upsertCalls = (): any[] => (globalThis as any).__upsertCalls
+    const fakeNode = (id: string, data: any): any =>
+        node(id, { id, name: 'fakeNode', label: `Node ${id}`, category: 'Chains', inputs: {}, inputParams: [], ...data })
+
+    const baseParams = (over: any): any => ({
+        startingNodeIds: ['A'],
+        reactFlowNodes: [],
+        reactFlowEdges: [],
+        graph: {},
+        depthQueue: {},
+        componentNodes: { fakeNode: { filePath: fixturePath }, setVariable: { filePath: fixturePath } },
+        question: 'q',
+        chatHistory: [],
+        chatId: 'c1',
+        sessionId: 's1',
+        chatflowid: 'cf1',
+        apiMessageId: '',
+        appDataSource: {} as any,
+        ...over
+    })
+
+    const linearFlow = () => {
+        const nodes = [fakeNode('A', { category: 'Chat Models' }), fakeNode('B', {})]
+        const edges = [edge('A', 'B')]
+        const graph = constructGraphs(nodes, edges).graph
+        const depthQueue = calculateNodesDepth(graph, ['A'])
+        return { nodes, edges, graph, depthQueue }
+    }
+
+    it('initializes nodes in dependency order and stores instances', async () => {
+        const { nodes, edges, graph, depthQueue } = linearFlow()
+        const result: any[] = await buildFlow(baseParams({ reactFlowNodes: nodes, reactFlowEdges: edges, graph, depthQueue }))
+        expect(initCalls().map((c) => c.data.id)).toEqual(['A', 'B'])
+        const byId = Object.fromEntries(result.map((n: any) => [n.id, n.data.instance]))
+        expect(byId.A).toEqual({ output: 'result-A' })
+        expect(byId.B).toEqual({ output: 'result-B' })
+    })
+
+    it('upsert mode records flow data and stops at stopNodeId with the upsert result', async () => {
+        const { nodes, edges, graph, depthQueue } = linearFlow()
+        const result = await buildFlow(
+            baseParams({ reactFlowNodes: nodes, reactFlowEdges: edges, graph, depthQueue, isUpsert: true, stopNodeId: 'B' })
+        )
+        expect(result.result).toBe('upsert-result')
+        expect(result.flowData).toHaveLength(2)
+        expect(upsertCalls()).toHaveLength(1)
+        expect(upsertCalls()[0].data.id).toBe('B')
+        // node A was initialized normally, node B was upserted (no init call for B)
+        expect(initCalls().map((c) => c.data.id)).toEqual(['A'])
+    })
+
+    it('skips document loaders connected to a non-memory vector store', async () => {
+        const doc = fakeNode('D', {
+            category: 'Document Loaders',
+            outputAnchors: [{ id: 'a1', options: [{ name: 'output', id: 'docOut' }] }],
+            outputs: { output: 'output' }
+        })
+        const vs = fakeNode('V', { category: 'Vector Stores' })
+        const edges = [{ source: 'D', target: 'V', sourceHandle: 'docOut' } as any]
+        const graph = constructGraphs([doc, vs], edges).graph
+        const depthQueue = calculateNodesDepth(graph, ['D'])
+        await buildFlow(baseParams({ startingNodeIds: ['D'], reactFlowNodes: [doc, vs], reactFlowEdges: edges, graph, depthQueue }))
+        expect(initCalls().map((c) => c.data.id)).toEqual(['V'])
+    })
+
+    it('collects dynamic variables from setVariable nodes for downstream nodes', async () => {
+        const nodes = [fakeNode('A', { name: 'setVariable', category: 'Utilities' }), fakeNode('B', {})]
+        const edges = [edge('A', 'B')]
+        const graph = constructGraphs(nodes, edges).graph
+        const depthQueue = calculateNodesDepth(graph, ['A'])
+        const result: any[] = await buildFlow(baseParams({ reactFlowNodes: nodes, reactFlowEdges: edges, graph, depthQueue }))
+        expect(initCalls()[1].options.dynamicVariables).toEqual({ foo: 'bar' })
+        expect(result.find((n: any) => n.id === 'A').data.instance).toBe('sv-output')
+    })
+
+    it('rethrows node init errors', async () => {
+        const nodes = [node('A', { id: 'A', name: 'failNode', label: 'Fail', category: 'Chains', inputs: {}, inputParams: [] })]
+        const graph = constructGraphs(nodes, []).graph
+        const depthQueue = calculateNodesDepth(graph, ['A'])
+        await expect(
+            buildFlow(
+                baseParams({
+                    reactFlowNodes: nodes,
+                    reactFlowEdges: [],
+                    graph,
+                    depthQueue,
+                    componentNodes: { failNode: { filePath: failingFixturePath } }
+                })
+            )
+        ).rejects.toThrow()
     })
 })
