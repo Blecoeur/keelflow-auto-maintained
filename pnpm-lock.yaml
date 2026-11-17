@@ -260,7 +260,7 @@ importers:
         version: 0.24.1
       '@grpc/grpc-js':
         specifier: ^1.14.5
-        version: 1.14.7
+        version: 1.14.6
       '@huggingface/inference':
         specifier: ^4.13.2
         version: 4.13.2
@@ -287,7 +287,7 @@ importers:
         version: 1.0.2(@langchain/core@1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)))
       '@langchain/community':
         specifier: 1.1.12
-        version: 1.1.12(a8cf6f18026c1e10049473d7128efeae)
+        version: 1.1.12(9a7229f1ecf62a23d6d5346cb05bbe88)
       '@langchain/core':
         specifier: 1.1.20
         version: 1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
@@ -344,7 +344,7 @@ importers:
         version: 1.3.1(@langchain/core@1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       '@mem0/community':
         specifier: ^0.0.1
-        version: 0.0.1(845dcf6189184b47e7887fd967d58efd)
+        version: 0.0.1(6d4502c23eb6e3727eb4ceb812637ef1)
       '@mendable/firecrawl-js':
         specifier: ^1.18.2
         version: 1.25.1
@@ -3981,8 +3981,8 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
-  '@grpc/grpc-js@1.14.7':
-    resolution: {integrity: sha512-W4W/fcBMGRVtG6dW2c7cw2mnpS3hvbBd+oQXjh2iYFTZDk1JJmcNqkM5KSaPubQpamlUUurrlb7G1s9NJeERmQ==}
+  '@grpc/grpc-js@1.14.6':
+    resolution: {integrity: sha512-SgC/B3/VZ8lTyOZ4Cwk6f1skWhmkNAaVfiX90qd5u1rRXGKk1//8FTUEN9GvOUq7rfWIqAYkA3CoyumYVpOS6g==}
     engines: {node: '>=12.10.0'}
 
   '@grpc/proto-loader@0.7.13':
@@ -4012,8 +4012,8 @@ packages:
     peerDependencies:
       axios: 1.20.0
 
-  '@hono/node-server@1.19.19':
-    resolution: {integrity: sha512-Fy9R7PACOzHU9LDpfnuzVyuVYevKQRcEG2mZhmfc+DRdmayEd3RVfa2XOt2IgGcPNgA77Yk63KBszepcMFK5Ng==}
+  '@hono/node-server@1.19.14':
+    resolution: {integrity: sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4.13.5
@@ -6408,8 +6408,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.65.0':
-    resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
+  '@playwright/test@1.65.1':
+    resolution: {integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -7777,9 +7777,6 @@ packages:
 
   '@types/estree@0.0.39':
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
-
-  '@types/estree@1.0.10':
-    resolution: {integrity: sha512-lTyOMnOcmRBzdCv6/4zUZCrEhV0xrqQiUZBZtVcbmLHBXKLnN8q89v/wKRF/Q0HbwVsqbIG3o5HDoFl9sduM+g==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -10604,8 +10601,8 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  electron-to-chromium@1.5.485:
-    resolution: {integrity: sha512-m3uadzR0Z+sR19HGWgfxoZcKv9hE/edVM9OZ+FJ4wNRyfuFtkwZJIDoehEty5sisYVwmge8lKV1tenWOyClVgw==}
+  electron-to-chromium@1.5.486:
+    resolution: {integrity: sha512-rpybw4Ac4ak/An6G1Me2+61xzwobowDGyuJe71QHHOVpkZv4fPVobsLl7WH6zHSKusAMpaHxGKTpOvpy7+r3dQ==}
 
   emittery@0.10.2:
     resolution: {integrity: sha512-aITqOwnLanpHLNXZJENbOgjUBeHocD+xsSJmNrjovKBW5HbSpW3d1pEls7GFQPUWXiwG9+0P4GtHfEqC/4M0Iw==}
@@ -11189,11 +11186,11 @@ packages:
   fast-uri@3.1.9:
     resolution: {integrity: sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ==}
 
-  fast-xml-builder@1.3.1:
-    resolution: {integrity: sha512-pIM/1n3ntFXKYrUZwW7QCK0gAW7XY+wzj1YMIV3tLDvPj/V+zTGJK5e3/4WJfwj0qWw2ElNXiTixda/R+3YSug==}
+  fast-xml-builder@1.3.2:
+    resolution: {integrity: sha512-OX91VSlShLPDgRZV7tk/YQ4l8tT75QziF5Ixg8g4PFbCVPjuTWwN+yQfAxLJ0dufJpprdOd6HlM74Jhd39TcBQ==}
 
-  fast-xml-parser@5.12.0:
-    resolution: {integrity: sha512-/pXxRBtwxY9w8z7YbgsvIPPcPvFDsTbIkWwTQJhzNJPokj+TbN6ftmcv4j/pEQDvOCNnKGDzuk5Bo2oogIOiFg==}
+  fast-xml-parser@5.12.1:
+    resolution: {integrity: sha512-wR8dO/fx+z8C5exuem1e7BKOWvjsuzvjS/tvA/Xu3Z1zQqJGcXrPzXbcAiaMgp2KjreEROcTkmnnisrcmJ2hYQ==}
     hasBin: true
 
   fastest-levenshtein@1.0.16:
@@ -14476,8 +14473,8 @@ packages:
   node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
 
-  node-releases@2.0.63:
-    resolution: {integrity: sha512-6li2QanLsAXpIH2R6j77MzRyvOyrvdTqlKtO4CgBdHGNvN99ZZfyxszHc5o5+IZBWD5u6Hzwg83JoGXmqZNG9Q==}
+  node-releases@2.0.64:
+    resolution: {integrity: sha512-zAPCKqMcnqs2nGy6nlkm7JduFseiBJy3EXHGLh+8pFR+TxGCBxxiEN21+UROU5CKwX/f4TlUcYjiM+vs/tsyxw==}
     engines: {node: '>=18'}
 
   nodemon@2.0.22:
@@ -15158,8 +15155,8 @@ packages:
   platform@1.3.6:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
 
-  playwright-core@1.65.0:
-    resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
+  playwright-core@1.65.1:
+    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -15606,10 +15603,6 @@ packages:
 
   postcss@8.5.28:
     resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
-    engines: {node: ^10 || ^12 || >=14}
-
-  postcss@8.5.32:
-    resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
     engines: {node: ^10 || ^12 || >=14}
 
   postgres-array@2.0.0:
@@ -16994,10 +16987,6 @@ packages:
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
-    engines: {node: '>=0.10.0'}
-
-  source-map-js@1.2.2:
-    resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
 
   source-map-loader@3.0.2:
@@ -18866,7 +18855,7 @@ packages:
     engines: {node: '>=4'}
 
   xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz:
-    resolution: {tarball: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz}
+    resolution: {integrity: sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA==, tarball: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz}
     version: 0.20.3
     engines: {node: '>=0.8'}
     hasBin: true
@@ -19756,7 +19745,7 @@ snapshots:
       '@smithy/smithy-client': 4.13.6
       '@smithy/types': 4.14.3
       '@smithy/util-middleware': 4.3.6
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@aws-sdk/core@3.844.0':
@@ -19774,7 +19763,7 @@ snapshots:
       '@smithy/util-body-length-browser': 4.2.2
       '@smithy/util-middleware': 4.2.11
       '@smithy/util-utf8': 4.2.2
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@aws-sdk/core@3.864.0':
@@ -19792,7 +19781,7 @@ snapshots:
       '@smithy/util-body-length-browser': 4.2.2
       '@smithy/util-middleware': 4.2.11
       '@smithy/util-utf8': 4.2.2
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@aws-sdk/core@3.973.17':
@@ -20970,13 +20959,13 @@ snapshots:
   '@aws-sdk/xml-builder@3.972.29':
     dependencies:
       '@smithy/types': 4.14.3
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@aws-sdk/xml-builder@3.972.9':
     dependencies:
       '@smithy/types': 4.13.0
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@aws/lambda-invoke-store@0.2.3': {}
@@ -21050,7 +21039,7 @@ snapshots:
 
   '@azure/core-xml@1.5.0':
     dependencies:
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       tslib: 2.8.1
 
   '@azure/logger@1.3.0':
@@ -22568,11 +22557,11 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@browserbasehq/stagehand@1.9.0(@playwright/test@1.65.0)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)':
+  '@browserbasehq/stagehand@1.9.0(@playwright/test@1.65.1)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)':
     dependencies:
       '@anthropic-ai/sdk': 0.73.0(zod@4.3.6)
       '@browserbasehq/sdk': 2.0.0(encoding@0.1.13)
-      '@playwright/test': 1.65.0
+      '@playwright/test': 1.65.1
       deepmerge: 4.3.1
       dotenv: 16.4.5
       openai: 6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6)
@@ -23382,7 +23371,7 @@ snapshots:
 
   '@gomomento/generated-types@0.106.1(encoding@0.1.13)':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       google-protobuf: 3.21.2
       grpc-tools: 1.12.4(encoding@0.1.13)
       protoc-gen-ts: 0.8.7
@@ -23399,7 +23388,7 @@ snapshots:
     dependencies:
       '@gomomento/generated-types': 0.106.1(encoding@0.1.13)
       '@gomomento/sdk-core': 1.68.1
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@types/google-protobuf': 3.15.10
       google-protobuf: 3.21.2
       jwt-decode: 3.1.2
@@ -23481,7 +23470,7 @@ snapshots:
       abort-controller: 3.0.0
       async-retry: 1.3.3
       duplexify: 4.1.3
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       gaxios: 6.3.0(encoding@0.1.13)
       google-auth-library: 9.15.1(encoding@0.1.13)
       html-entities: 2.5.2
@@ -23517,7 +23506,7 @@ snapshots:
     dependencies:
       graphql: 16.13.1
 
-  '@grpc/grpc-js@1.14.7':
+  '@grpc/grpc-js@1.14.6':
     dependencies:
       '@grpc/proto-loader': 0.8.1
       '@js-sdsl/ordered-map': 4.4.2
@@ -23554,7 +23543,7 @@ snapshots:
     dependencies:
       axios: 1.20.0(debug@4.3.4)
 
-  '@hono/node-server@1.19.19(hono@4.13.18)':
+  '@hono/node-server@1.19.14(hono@4.13.18)':
     dependencies:
       hono: 4.13.18
 
@@ -24584,9 +24573,9 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@langchain/community@0.3.49(74ea1946c569e0ea5c9b59b547c84e24)':
+  '@langchain/community@0.3.49(cc52838c8a3908593b1c0a54b06f3af7)':
     dependencies:
-      '@browserbasehq/stagehand': 1.9.0(@playwright/test@1.65.0)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)
+      '@browserbasehq/stagehand': 1.9.0(@playwright/test@1.65.1)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)
       '@ibm-cloud/watsonx-ai': 1.7.7
       '@langchain/core': 1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       '@langchain/openai': 0.6.3(@langchain/core@1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
@@ -24641,7 +24630,7 @@ snapshots:
       crypto-js: 4.2.0
       d3-dsv: 2.0.0
       epub2: 3.0.2(ts-toolbelt@9.6.0)
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       google-auth-library: 9.6.3(encoding@0.1.13)
       html-to-text: 9.0.5
       ignore: 5.3.1
@@ -24690,9 +24679,9 @@ snapshots:
       - handlebars
       - peggy
 
-  '@langchain/community@1.1.12(a8cf6f18026c1e10049473d7128efeae)':
+  '@langchain/community@1.1.12(9a7229f1ecf62a23d6d5346cb05bbe88)':
     dependencies:
-      '@browserbasehq/stagehand': 1.9.0(@playwright/test@1.65.0)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)
+      '@browserbasehq/stagehand': 1.9.0(@playwright/test@1.65.1)(@types/node@24.13.2)(bufferutil@4.0.8)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(utf-8-validate@6.0.4)(zod@4.3.6)
       '@ibm-cloud/watsonx-ai': 1.7.7
       '@langchain/classic': 1.0.15(@langchain/core@1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(cheerio@1.0.0-rc.12)(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(typeorm@0.3.30(babel-plugin-macros@3.1.0)(ioredis@5.3.2)(mongodb@6.3.0(@aws-sdk/credential-providers@3.1002.0)(socks@2.8.1))(mysql2@3.24.6(@types/node@24.13.2))(pg@8.11.3)(redis@4.6.13)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.4.6(@swc/helpers@0.5.23))(@types/node@24.13.2)(typescript@5.5.2)))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       '@langchain/core': 1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
@@ -24742,7 +24731,7 @@ snapshots:
       d3-dsv: 2.0.0
       epub2: 3.0.2(ts-toolbelt@9.6.0)
       faiss-node: 0.5.1
-      fast-xml-parser: 5.12.0
+      fast-xml-parser: 5.12.1
       google-auth-library: 9.6.3(encoding@0.1.13)
       html-to-text: 9.0.5
       ignore: 5.3.1
@@ -25102,9 +25091,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@mem0/community@0.0.1(845dcf6189184b47e7887fd967d58efd)':
+  '@mem0/community@0.0.1(6d4502c23eb6e3727eb4ceb812637ef1)':
     dependencies:
-      '@langchain/community': 0.3.49(74ea1946c569e0ea5c9b59b547c84e24)
+      '@langchain/community': 0.3.49(cc52838c8a3908593b1c0a54b06f3af7)
       '@langchain/core': 1.1.20(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.54.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(openai@6.19.0(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@4.3.6))(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       axios: 1.20.0(debug@4.3.4)
       mem0ai: 2.1.16(@anthropic-ai/sdk@0.73.0(zod@4.3.6))(@google/genai@0.7.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4))(@mistralai/mistralai@1.14.0(bufferutil@4.0.8)(utf-8-validate@6.0.4))(@qdrant/js-client-rest@1.18.0(typescript@5.5.2))(@supabase/supabase-js@2.39.8(bufferutil@4.0.8)(utf-8-validate@6.0.4))(@types/jest@29.5.14)(@types/pg@8.11.2)(@types/sqlite3@3.1.11)(groq-sdk@1.1.2)(neo4j-driver@5.27.0)(ollama@0.5.11)(pg@8.11.3)(redis@4.6.13)(sqlite3@5.1.7)(ws@8.21.3(bufferutil@4.0.8)(utf-8-validate@6.0.4))
@@ -25299,7 +25288,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.19(hono@4.13.18)
+      '@hono/node-server': 1.19.14(hono@4.13.18)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -25321,7 +25310,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(zod@4.3.6)':
     dependencies:
-      '@hono/node-server': 1.19.19(hono@4.13.18)
+      '@hono/node-server': 1.19.14(hono@4.13.18)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -25827,7 +25816,7 @@ snapshots:
 
   '@opentelemetry/exporter-metrics-otlp-grpc@0.54.0(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.27.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/exporter-metrics-otlp-http': 0.54.0(@opentelemetry/api@1.9.0)
@@ -25858,7 +25847,7 @@ snapshots:
 
   '@opentelemetry/exporter-trace-otlp-grpc@0.54.0(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.27.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/otlp-grpc-exporter-base': 0.54.0(@opentelemetry/api@1.9.0)
@@ -25903,7 +25892,7 @@ snapshots:
 
   '@opentelemetry/otlp-grpc-exporter-base@0.54.0(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.27.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/otlp-exporter-base': 0.54.0(@opentelemetry/api@1.9.0)
@@ -26042,7 +26031,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.65.0':
+  '@playwright/test@1.65.1':
     dependencies:
       playwright: 1.64.1
 
@@ -26310,7 +26299,7 @@ snapshots:
 
   '@rollup/pluginutils@5.1.3(rollup@4.63.4)':
     dependencies:
-      '@types/estree': 1.0.10
+      '@types/estree': 1.0.9
       estree-walker: 2.0.2
       picomatch: 4.0.7
     optionalDependencies:
@@ -27629,16 +27618,14 @@ snapshots:
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 8.56.5
-      '@types/estree': 1.0.10
+      '@types/estree': 1.0.9
 
   '@types/eslint@8.56.5':
     dependencies:
-      '@types/estree': 1.0.10
+      '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
 
   '@types/estree@0.0.39': {}
-
-  '@types/estree@1.0.10': {}
 
   '@types/estree@1.0.8': {}
 
@@ -27679,7 +27666,7 @@ snapshots:
 
   '@types/glob-stream@8.0.2':
     dependencies:
-      '@types/node': 22.16.3
+      '@types/node': 24.13.2
       '@types/picomatch': 2.3.3
       '@types/streamx': 2.9.5
 
@@ -27882,7 +27869,7 @@ snapshots:
   '@types/request@2.48.12':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.16.3
+      '@types/node': 24.13.2
       '@types/tough-cookie': 4.0.5
       form-data: 4.0.6
 
@@ -27995,7 +27982,7 @@ snapshots:
   '@types/vinyl@2.0.11':
     dependencies:
       '@types/expect': 1.20.4
-      '@types/node': 22.16.3
+      '@types/node': 24.13.2
 
   '@types/webidl-conversions@7.0.3': {}
 
@@ -28321,7 +28308,7 @@ snapshots:
 
   '@zilliz/milvus2-sdk-node@2.3.5':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@grpc/proto-loader': 0.7.7
       dayjs: 1.11.10
       lru-cache: 9.1.2
@@ -28330,7 +28317,7 @@ snapshots:
 
   '@zilliz/milvus2-sdk-node@2.4.2':
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@grpc/proto-loader': 0.7.13
       '@petamoriken/float16': 3.8.7
       dayjs: 1.11.10
@@ -29250,8 +29237,8 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.11.37
       caniuse-lite: 1.0.30001826
-      electron-to-chromium: 1.5.485
-      node-releases: 2.0.63
+      electron-to-chromium: 1.5.486
+      node-releases: 2.0.64
       update-browserslist-db: 1.3.4(browserslist@4.29.5)
 
   bs-logger@0.2.6:
@@ -30742,7 +30729,7 @@ snapshots:
   dockerode@4.0.4:
     dependencies:
       '@balena/dockerignore': 1.0.2
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@grpc/proto-loader': 0.7.13
       docker-modem: 5.0.6
       protobufjs: 7.6.6
@@ -30909,7 +30896,7 @@ snapshots:
     dependencies:
       jake: 10.8.7
 
-  electron-to-chromium@1.5.485: {}
+  electron-to-chromium@1.5.486: {}
 
   emittery@0.10.2: {}
 
@@ -31897,15 +31884,15 @@ snapshots:
 
   fast-uri@3.1.9: {}
 
-  fast-xml-builder@1.3.1:
+  fast-xml-builder@1.3.2:
     dependencies:
       path-expression-matcher: 1.6.2
       xml-naming: 0.3.0
 
-  fast-xml-parser@5.12.0:
+  fast-xml-parser@5.12.1:
     dependencies:
       '@nodable/entities': 3.1.0
-      fast-xml-builder: 1.3.1
+      fast-xml-builder: 1.3.2
       is-unsafe: 2.0.3
       path-expression-matcher: 1.6.2
       strnum: 2.5.1
@@ -32738,7 +32725,7 @@ snapshots:
 
   google-gax@4.3.7(encoding@0.1.13):
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@grpc/proto-loader': 0.7.13
       '@types/long': 4.0.2
       abort-controller: 3.0.0
@@ -35143,7 +35130,7 @@ snapshots:
       '@datastax/astra-db-ts': 1.5.0
       '@google-cloud/vertexai': 1.1.0(encoding@0.1.13)
       '@google/generative-ai': 0.24.1
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       '@huggingface/inference': 2.7.0
       '@llamaindex/cloud': 0.0.5(node-fetch@2.7.0(encoding@0.1.13))
       '@llamaindex/env': 0.1.3(@aws-crypto/sha256-js@5.2.0)(pathe@1.1.2)
@@ -36293,7 +36280,7 @@ snapshots:
 
   nice-grpc@2.1.14:
     dependencies:
-      '@grpc/grpc-js': 1.14.7
+      '@grpc/grpc-js': 1.14.6
       abort-controller-x: 0.4.3
       nice-grpc-common: 2.0.2
 
@@ -36374,7 +36361,7 @@ snapshots:
 
   node-int64@0.4.0: {}
 
-  node-releases@2.0.63: {}
+  node-releases@2.0.64: {}
 
   nodemon@2.0.22:
     dependencies:
@@ -37112,11 +37099,11 @@ snapshots:
 
   platform@1.3.6: {}
 
-  playwright-core@1.65.0: {}
+  playwright-core@1.65.1: {}
 
   playwright@1.64.1:
     dependencies:
-      playwright-core: 1.65.0
+      playwright-core: 1.65.1
 
   popmotion@9.3.6:
     dependencies:
@@ -37557,12 +37544,6 @@ snapshots:
       nanoid: 3.3.20
       picocolors: 1.1.1
       source-map-js: 1.2.1
-
-  postcss@8.5.32:
-    dependencies:
-      nanoid: 3.3.20
-      picocolors: 1.1.1
-      source-map-js: 1.2.2
 
   postgres-array@2.0.0: {}
 
@@ -39440,8 +39421,6 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  source-map-js@1.2.2: {}
-
   source-map-loader@3.0.2(webpack@5.90.3(@swc/core@1.4.6(@swc/helpers@0.5.23))):
     dependencies:
       abab: 2.0.6
@@ -39878,7 +39857,7 @@ snapshots:
       '@types/stylis': 4.2.5
       css-to-react-native: 3.2.0
       csstype: 3.1.3
-      postcss: 8.5.32
+      postcss: 8.5.28
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       shallowequal: 1.1.0
@@ -40358,7 +40337,7 @@ snapshots:
 
   ts-type@3.0.1(ts-toolbelt@9.6.0):
     dependencies:
-      '@types/node': 22.16.3
+      '@types/node': 24.13.2
       ts-toolbelt: 9.6.0
       tslib: 2.8.1
       typedarray-dts: 1.0.0
