@@ -17,7 +17,7 @@ jobs:
             contents: read
             packages: write
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - name: Free disk space
               run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
             - uses: docker/setup-qemu-action@v4
@@ -43,7 +43,7 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - name: Create the draft with notes from store/
               env:
                   GH_TOKEN: ${{ github.token }}
