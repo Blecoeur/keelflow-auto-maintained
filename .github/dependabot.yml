@@ -8,6 +8,12 @@
 # - github-actions updates are infrastructure changes: the policy check
 #   surfaces them as needs-human (green, never auto-merged); they are
 #   merged by human decision only.
+#
+# Re-registered 2026-11-24: version updates had been auto-deactivated
+# after repeated update-job failures (Dependabot lockfiles dropping the
+# pnpm overrides section). Any push to this file re-registers the
+# config and schedules a fresh check. Stall detection:
+# .github/workflows/dependabot-watchdog.yml
 
 version: 2
 updates:
