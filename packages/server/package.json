@@ -126,7 +126,7 @@
         "@opentelemetry/resources": "1.27.0",
         "@opentelemetry/sdk-metrics": "1.27.0",
         "@opentelemetry/sdk-trace-base": "1.27.0",
-        "@opentelemetry/semantic-conventions": "1.27.0",
+        "@opentelemetry/semantic-conventions": "1.45.0",
         "@types/bcryptjs": "^2.4.6",
         "@types/lodash": "^4.17.20",
         "async-mutex": "^0.4.0",
