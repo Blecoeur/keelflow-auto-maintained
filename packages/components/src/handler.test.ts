@@ -1,5 +1,13 @@
 import { OTLPTraceExporter as ProtoOTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
-import { getPhoenixTracer, AnalyticHandler } from './handler'
+import {
+    getPhoenixTracer,
+    AnalyticHandler,
+    tryJsonStringify,
+    elapsed,
+    ConsoleCallbackHandler,
+    CustomStreamingHandler,
+    additionalCallbacks
+} from './handler'
 import { resetTracingEnvCache } from './tracingEnv'
 
 jest.mock('@opentelemetry/exporter-trace-otlp-proto', () => {
@@ -432,5 +440,275 @@ describe('AnalyticHandler chainRun map on recursive onChainStart', () => {
         expect(innerRun.patchRun).toHaveBeenCalledTimes(1)
         expect(outerRun.end).toHaveBeenCalledWith({ outputs: { output: 'outer output' } })
         expect(innerRun.end).toHaveBeenCalledWith({ outputs: { output: 'inner output' } })
+    })
+})
+
+describe('tryJsonStringify', () => {
+    it('serializes plain objects', () => {
+        expect(JSON.parse(tryJsonStringify({ a: 1 }, 'fb'))).toEqual({ a: 1 })
+    })
+
+    it('returns the fallback for circular structures', () => {
+        const obj: any = {}
+        obj.self = obj
+        expect(tryJsonStringify(obj, 'fallback!')).toBe('fallback!')
+    })
+})
+
+describe('elapsed', () => {
+    it('returns empty string without end_time', () => {
+        expect(elapsed({ start_time: 1000 } as any)).toBe('')
+    })
+
+    it('formats sub-second and multi-second durations', () => {
+        expect(elapsed({ start_time: 1000, end_time: 1500 } as any)).toBe('500ms')
+        expect(elapsed({ start_time: 0, end_time: 2500 } as any)).toBe('2.50s')
+    })
+})
+
+describe('ConsoleCallbackHandler', () => {
+    const makeLogger = (): any => ({ verbose: jest.fn(), level: 'info' })
+    const makeRun = (over: any): any => ({
+        id: 'run-1',
+        execution_order: 2,
+        run_type: 'chain',
+        name: 'Child',
+        inputs: {},
+        ...over
+    })
+
+    it('logs chain start with breadcrumb trail from runMap', () => {
+        const logger = makeLogger()
+        const handler = new ConsoleCallbackHandler(logger, 'org-1')
+        const parent = makeRun({ id: 'p', parent_run_id: undefined, execution_order: 1, name: 'Parent' })
+        const run = makeRun({ parent_run_id: 'p', inputs: { q: 'hi' } })
+        ;(handler as any).runMap.set('p', parent)
+
+        handler.onChainStart(run)
+
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('[org-1]: [chain/start]'))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('1:chain:Parent > 2:chain:Child'))
+    })
+
+    it('onLLMStart trims prompt inputs', () => {
+        const logger = makeLogger()
+        const handler = new ConsoleCallbackHandler(logger)
+        handler.onLLMStart(makeRun({ run_type: 'llm', name: 'LLM', inputs: { prompts: ['  hello  '] } }))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('[llm/start]'))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('hello'))
+        expect(logger.verbose).not.toHaveBeenCalledWith(expect.stringContaining('  hello  '))
+    })
+
+    it('onChainEnd / onToolEnd include elapsed time', () => {
+        const logger = makeLogger()
+        const handler = new ConsoleCallbackHandler(logger)
+        handler.onChainEnd(makeRun({ outputs: { ok: true }, start_time: 0, end_time: 1500 }))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('[chain/end]'))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('1.50s'))
+
+        handler.onToolEnd(makeRun({ run_type: 'tool', outputs: { output: ' done ' }, start_time: 0, end_time: 100 }))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('100ms'))
+        expect(logger.verbose).toHaveBeenCalledWith(expect.stringContaining('done'))
+    })
+
+    it('sets logger level from LOG_LEVEL when DEBUG=true', () => {
+        const savedDebug = process.env.DEBUG
+        const savedLevel = process.env.LOG_LEVEL
+        process.env.DEBUG = 'true'
+        process.env.LOG_LEVEL = 'debug'
+        try {
+            const logger = makeLogger()
+            new ConsoleCallbackHandler(logger)
+            expect(logger.level).toBe('debug')
+        } finally {
+            if (savedDebug === undefined) delete process.env.DEBUG
+            else process.env.DEBUG = savedDebug
+            if (savedLevel === undefined) delete process.env.LOG_LEVEL
+            else process.env.LOG_LEVEL = savedLevel
+        }
+    })
+})
+
+describe('CustomStreamingHandler', () => {
+    const makeStreamer = () => ({ streamCustomEvent: jest.fn() })
+
+    it('streams tool start/end/error events', async () => {
+        const streamer = makeStreamer()
+        const handler = new CustomStreamingHandler(streamer as any, 'chat-1')
+
+        await handler.handleToolStart({ name: 'myTool' } as any, 'the input', 'run-1', 'parent-1')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith('chat-1', 'agent_trace', {
+            step: 'tool_start',
+            name: 'myTool',
+            input: 'the input',
+            runId: 'run-1',
+            parentRunId: 'parent-1'
+        })
+
+        await handler.handleToolEnd({ out: 1 }, 'run-2')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith('chat-1', 'agent_trace', {
+            step: 'tool_end',
+            output: JSON.stringify({ out: 1 }, null, 2),
+            runId: 'run-2',
+            parentRunId: null
+        })
+
+        await handler.handleToolError(new Error('bad'), 'run-3')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith('chat-1', 'agent_trace', {
+            step: 'tool_error',
+            error: 'bad',
+            runId: 'run-3',
+            parentRunId: null
+        })
+    })
+
+    it('handles missing tool name and non-string input/output', async () => {
+        const streamer = makeStreamer()
+        const handler = new CustomStreamingHandler(streamer as any, 'chat-1')
+        await handler.handleToolStart({} as any, { complex: true } as any, 'run-1')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith(
+            'chat-1',
+            'agent_trace',
+            expect.objectContaining({ step: 'tool_start', name: 'unknown-tool', input: JSON.stringify({ complex: true }, null, 2) })
+        )
+        await handler.handleToolEnd('plain string', 'run-2')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith(
+            'chat-1',
+            'agent_trace',
+            expect.objectContaining({ step: 'tool_end', output: 'plain string' })
+        )
+    })
+
+    it('streams agent actions', async () => {
+        const streamer = makeStreamer()
+        const handler = new CustomStreamingHandler(streamer as any, 'chat-1')
+        await handler.handleAgentAction({ tool: 't', input: 'i' } as any, 'run-9', 'p-9')
+        expect(streamer.streamCustomEvent).toHaveBeenLastCalledWith('chat-1', 'agent_trace', {
+            step: 'agent_action',
+            action: JSON.stringify({ tool: 't', input: 'i' }),
+            runId: 'run-9',
+            parentRunId: 'p-9'
+        })
+    })
+
+    it('no-ops when the streamer is missing', async () => {
+        const handler = new CustomStreamingHandler(undefined as any, 'chat-1')
+        await expect(handler.handleToolStart({ name: 't' } as any, 'in', 'r')).resolves.toBeUndefined()
+        await expect(handler.handleToolEnd('out', 'r')).resolves.toBeUndefined()
+        await expect(handler.handleToolError(new Error('e'), 'r')).resolves.toBeUndefined()
+        await expect(handler.handleAgentAction({} as any, 'r')).resolves.toBeUndefined()
+    })
+})
+
+describe('additionalCallbacks', () => {
+    beforeEach(() => resetTracingEnvCache())
+
+    it('returns [] when no analytic config and tracing env is disabled', async () => {
+        await expect(additionalCallbacks({ inputs: {} } as any, {})).resolves.toEqual([])
+    })
+
+    it('returns [] when all configured providers are disabled', async () => {
+        const options: any = { analytic: JSON.stringify({ langSmith: { status: false }, langFuse: { status: false } }) }
+        await expect(additionalCallbacks({ inputs: {} } as any, options)).resolves.toEqual([])
+    })
+
+    it('wraps errors from malformed analytic config', async () => {
+        await expect(additionalCallbacks({ inputs: {} } as any, { analytic: '{not json' })).rejects.toThrow()
+    })
+})
+
+describe('AnalyticHandler lifecycle', () => {
+    const LANGSMITH_KEYS = ['LANGSMITH_TRACING', 'LANGSMITH_API_KEY', 'LANGSMITH_ENDPOINT', 'LANGSMITH_PROJECT'] as const
+    let envSnapshot: Partial<Record<(typeof LANGSMITH_KEYS)[number], string | undefined>>
+
+    beforeEach(() => {
+        envSnapshot = {}
+        for (const k of LANGSMITH_KEYS) envSnapshot[k] = process.env[k]
+        for (const k of LANGSMITH_KEYS) delete process.env[k]
+        process.env.LANGSMITH_TRACING = 'true'
+        process.env.LANGSMITH_API_KEY = 'test-key'
+        resetTracingEnvCache()
+        mockRunTreeInstances.length = 0
+    })
+
+    afterEach(() => {
+        for (const k of LANGSMITH_KEYS) delete process.env[k]
+        for (const k of LANGSMITH_KEYS) {
+            const v = envSnapshot[k]
+            if (v !== undefined) process.env[k] = v
+        }
+        resetTracingEnvCache()
+        AnalyticHandler.resetInstance('lc-1')
+        AnalyticHandler.resetInstance('lc-llm')
+        AnalyticHandler.resetInstance('lc-err')
+        AnalyticHandler.resetInstance('lc-clean')
+        AnalyticHandler.resetInstance('lc-none')
+    })
+
+    it('getInstance requires a chatId', () => {
+        expect(() => AnalyticHandler.getInstance({ inputs: {} } as any, {})).toThrow('ChatId is required for analytics')
+    })
+
+    it('getInstance returns a per-chatId singleton and resets when the config changes', () => {
+        const a = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-1' })
+        expect(AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-1' })).toBe(a)
+
+        const withConfig = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-1', analytic: '{"langSmith":{"status":true}}' })
+        expect(withConfig).not.toBe(a)
+
+        AnalyticHandler.resetInstance('lc-1')
+        expect(AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-1' })).not.toBe(withConfig)
+    })
+
+    it('cleanup only removes instances older than maxAge', () => {
+        const a = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-clean' })
+        AnalyticHandler.cleanup(1e12)
+        expect(AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-clean' })).toBe(a)
+        AnalyticHandler.cleanup(-1)
+        expect(AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-clean' })).not.toBe(a)
+    })
+
+    it('hasActiveProviders is false without config or tracing env, true after init with langsmith env', async () => {
+        for (const k of LANGSMITH_KEYS) delete process.env[k]
+        resetTracingEnvCache()
+        const noProvider = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-none' })
+        await noProvider.init()
+        expect(noProvider.hasActiveProviders()).toBe(false)
+
+        process.env.LANGSMITH_TRACING = 'true'
+        process.env.LANGSMITH_API_KEY = 'test-key'
+        resetTracingEnvCache()
+        const handler = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-llm' })
+        await handler.init()
+        expect(handler.hasActiveProviders()).toBe(true)
+    })
+
+    it('onLLMStart/onLLMEnd create and patch an llm run with usage metadata', async () => {
+        const handler = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-llm' })
+        await handler.init()
+
+        const chainIds = await handler.onChainStart('Chain', 'chain input')
+        const llmIds = await handler.onLLMStart('ChatModel', 'prompt', chainIds)
+        expect(llmIds.langSmith.llmRun).toBeDefined()
+
+        await handler.onLLMEnd(
+            llmIds,
+            { content: 'answer', usage_metadata: { prompt_tokens: 3, completion_tokens: 5, total_tokens: 8 } },
+            { model: 'gpt-x' }
+        )
+        const llmRunTree = mockRunTreeInstances[mockRunTreeInstances.length - 1]
+        expect(llmRunTree.patchRun).toHaveBeenCalled()
+
+        await handler.onChainEnd(chainIds, 'chain output', true)
+    })
+
+    it('onChainError ends the run with the error', async () => {
+        const handler = AnalyticHandler.getInstance({ inputs: {} } as any, { chatId: 'lc-err' })
+        await handler.init()
+
+        const ids = await handler.onChainStart('Chain', 'in')
+        await handler.onChainError(ids, 'boom', true)
+
+        expect(mockRunTreeInstances.some((r) => r.end.mock.calls.length > 0 || r.patchRun.mock.calls.length > 0)).toBe(true)
     })
 })
