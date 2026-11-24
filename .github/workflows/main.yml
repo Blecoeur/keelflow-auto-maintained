@@ -26,7 +26,7 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v6
-            - uses: pnpm/action-setup@v4
+            - uses: pnpm/action-setup@v6
               with:
                   version: 10.26.0
             - uses: actions/setup-node@v6
@@ -156,7 +156,7 @@ jobs:
                   cd "$RUNNER_TEMP/flowise"
                   npm pack flowise@3.1.4 --silent
                   tar xzf flowise-3.1.4.tgz
-            - uses: pnpm/action-setup@v4
+            - uses: pnpm/action-setup@v6
               with:
                   version: 10.26.0
             - uses: actions/setup-node@v6
