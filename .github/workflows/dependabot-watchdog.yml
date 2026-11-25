@@ -1,0 +1,91 @@
+# Dependabot stall watchdog for the Keelflow demonstrator.
+#
+# Dependabot version updates can be silently auto-deactivated by GitHub
+# after repeated update-job failures (as happened on 2026-11-17: the
+# generated lockfiles dropped the pnpm overrides section). With a weekly
+# schedule and a large dependency surface, long silences usually mean
+# the update job is gone, not that nothing needed updating.
+#
+# The watchdog runs daily and compares the stall window against
+# Dependabot's PR activity:
+# - stalled: opens one tracked issue (label maintenance-watchdog),
+#   idempotent while the stall lasts
+# - healthy: closes any open watchdog issue automatically
+#
+# The issue is a prompt for a human to check Insights > Dependency
+# graph > Dependabot (last checked / error badges) and Settings > Code
+# security (version updates toggle), not a diagnosis.
+
+name: Dependabot watchdog
+
+on:
+    schedule:
+        - cron: '30 6 * * *' # daily 06:30 UTC
+    workflow_dispatch:
+
+permissions:
+    issues: write
+    pull-requests: read
+
+concurrency:
+    group: dependabot-watchdog
+    cancel-in-progress: false
+
+env:
+    STALL_DAYS: '10'
+    WATCHDOG_LABEL: maintenance-watchdog
+
+jobs:
+    watchdog:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - name: Check Dependabot PR activity and manage the watchdog issue
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  set -euo pipefail
+
+                  since="$(date -u -d "${STALL_DAYS} days ago" +%Y-%m-%d)"
+                  count="$(gh api --method GET /search/issues \
+                      -f q="repo:${GITHUB_REPOSITORY} type:pr author:app/dependabot created:>=${since}" \
+                      -f per_page=1 --jq '.total_count')"
+                  echo "Dependabot PRs in the last ${STALL_DAYS} days: ${count}"
+
+                  open_issue_number="$(gh api "/repos/${GITHUB_REPOSITORY}/issues?labels=${WATCHDOG_LABEL}&state=open" \
+                      --jq '.[0].number // empty' || true)"
+
+                  if [ "${count}" -eq 0 ]; then
+                      gh api --method POST "/repos/${GITHUB_REPOSITORY}/labels" \
+                          -f name="${WATCHDOG_LABEL}" -f color=B60205 \
+                          -f description='Dependabot version updates appear stalled' >/dev/null 2>&1 || true
+
+                      if [ -n "${open_issue_number}" ]; then
+                          echo "Watchdog issue #${open_issue_number} is already open; keeping it."
+                          exit 0
+                      fi
+
+                      gh api --method POST "/repos/${GITHUB_REPOSITORY}/issues" \
+                          -f title="Dependabot appears stalled: no automatic PR in ${STALL_DAYS} days" \
+                          -f body="No Dependabot pull request has been opened since ${since}.
+
+                  Checklist:
+                  1. Insights > Dependency graph > Dependabot: last checked and error badges.
+                  2. Settings > Code security: Dependabot version updates should be enabled.
+                  3. If updates were auto-deactivated: re-register the config by pushing a
+                     change to .github/dependabot.yml (see the 2026-11-24 comment there).
+
+                  This issue closes automatically once Dependabot opens a PR again." \
+                          -f "labels[]=${WATCHDOG_LABEL}"
+                      echo "Opened watchdog issue for the stall."
+                  else
+                      if [ -n "${open_issue_number}" ]; then
+                          gh api --method POST "/repos/${GITHUB_REPOSITORY}/issues/${open_issue_number}/comments" \
+                              -f body="Dependabot activity detected in the last ${STALL_DAYS} days; closing this watchdog issue."
+                          gh api --method PATCH "/repos/${GITHUB_REPOSITORY}/issues/${open_issue_number}" \
+                              -f state=closed
+                          echo "Closed watchdog issue #${open_issue_number}."
+                      else
+                          echo "Healthy: Dependabot is active; nothing to do."
+                      fi
+                  fi
