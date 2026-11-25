@@ -218,7 +218,7 @@
         "sanitize-filename": "^1.6.3",
         "srt-parser-2": "^1.2.3",
         "supergateway": "3.0.1",
-        "typeorm": "^0.3.28",
+        "typeorm": "^0.3.31",
         "uuid": "^10.0.0",
         "vm2": "3.12.2",
         "weaviate-client": "3.12.0",
