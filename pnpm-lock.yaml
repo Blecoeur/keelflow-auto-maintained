@@ -1060,8 +1060,8 @@ importers:
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/extension-code-block@3.31.3(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(highlight.js@11.11.1)(lowlight@3.3.0)
       '@tiptap/extension-mention':
-        specifier: ^3.31.3
-        version: 3.31.3(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.6.3)(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))
+        specifier: ^3.35.0
+        version: 3.35.0(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.6.3)(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))
       '@tiptap/extension-placeholder':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/extensions@3.31.3(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))
@@ -7438,12 +7438,12 @@ packages:
       '@tiptap/core': ^3.31.3
       '@tiptap/pm': 3.31.3
 
-  '@tiptap/extension-mention@3.31.3':
-    resolution: {integrity: sha512-ygOPc3nQijSMUTbEdMeng12P1szk3znubA9xNi84f31VnR18VjmU0we8SIOSSVwDfm1GppSjRER2qHmX/wGIIw==}
+  '@tiptap/extension-mention@3.35.0':
+    resolution: {integrity: sha512-SrNPVnY7cAcAvasvr80TspyATMKkUAm1pJllnXjZAcgcFHyaDhmZ0ThCnhq2iZx3R2d9XMn1nLPKmk/Xdn2lLg==}
     peerDependencies:
       '@tiptap/core': ^3.31.3
-      '@tiptap/pm': 3.31.3
-      '@tiptap/suggestion': 3.31.3
+      '@tiptap/pm': 3.35.0
+      '@tiptap/suggestion': 3.35.0
 
   '@tiptap/extension-ordered-list@3.31.3':
     resolution: {integrity: sha512-mp3g11NgA/PYu8rj7J7Ez3l4qBy6WfTSmHIG4PZvEGG5w2oUAIkgb9DU7nPPzjmeme27oazFYZw+AtZA0+u4tw==}
@@ -27244,7 +27244,7 @@ snapshots:
       '@tiptap/core': 3.35.0(@tiptap/pm@3.31.3)
       '@tiptap/pm': 3.31.3
 
-  '@tiptap/extension-mention@3.31.3(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.6.3)(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))':
+  '@tiptap/extension-mention@3.35.0(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.6.3)(@tiptap/core@3.35.0(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))':
     dependencies:
       '@tiptap/core': 3.35.0(@tiptap/pm@3.31.3)
       '@tiptap/pm': 3.31.3
