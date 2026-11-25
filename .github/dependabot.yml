@@ -1,27 +1,53 @@
+# Dependabot configuration for the Keelflow demonstrator.
+#
+# Policy (per the autonomous-dependency-maintainer framework):
+# - weekly scan on Monday, explicit 3-day cooldown
+# - one PR per dependency (no giant grouped updates)
+# - ordinary MAJOR updates ignored: migrate majors only through the
+#   audit circuit, with verifiable justification
+# - github-actions updates are infrastructure changes: the policy check
+#   surfaces them as needs-human (green, never auto-merged); they are
+#   merged by human decision only.
+#
+# Re-registered 2026-11-24: version updates had been auto-deactivated
+# after repeated update-job failures (Dependabot lockfiles dropping the
+# pnpm overrides section). Any push to this file re-registers the
+# config and schedules a fresh check. Stall detection:
+# .github/workflows/dependabot-watchdog.yml
+
 version: 2
 updates:
-    - package-ecosystem: github-actions
-      directory: /
-      schedule:
-          interval: weekly
-      groups:
-          actions:
-              patterns: ['*']
-
     - package-ecosystem: npm
-      directory: /
+      directory: '/'
+      # Daily scan + one open PR at a time: every npm PR edits
+      # pnpm-lock.yaml, so concurrent npm PRs conflict with each other and
+      # each merge to main re-conflicts the rest. A single in-flight PR is
+      # always based on fresh main, which avoids those lockfile conflicts.
       schedule:
-          interval: weekly
-      open-pull-requests-limit: 5
-      groups:
-          security:
-              applies-to: security-updates
-              patterns: ['*']
-          minor-and-patch:
-              applies-to: version-updates
-              update-types: [minor, patch]
-              patterns: ['*']
+          interval: daily
+      cooldown:
+          default-days: 3
+      open-pull-requests-limit: 1
+      labels:
+          - dependencies
       ignore:
-          # major versions of LangChain, the AI SDKs and React change APIs; update them by hand
+          # major versions of LangChain, the AI SDKs and React change APIs;
+          # majors are deferred by policy in any case
           - dependency-name: '*'
             update-types: ['version-update:semver-major']
+          # @langchain/mistralai 1.2.x imports @langchain/core/utils/uuid,
+          # which only exists from @langchain/core 1.2.0; the repo pins
+          # @langchain/core 1.1.20 via pnpm overrides (see PR #38).
+          - dependency-name: '@langchain/mistralai'
+            update-types: ['version-update:semver-minor']
+
+    - package-ecosystem: github-actions
+      directory: '/'
+      schedule:
+          interval: weekly
+          day: monday
+      cooldown:
+          default-days: 3
+      labels:
+          - dependencies
+          - infrastructure
