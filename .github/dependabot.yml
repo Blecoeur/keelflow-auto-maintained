@@ -19,12 +19,15 @@ version: 2
 updates:
     - package-ecosystem: npm
       directory: '/'
+      # Daily scan + one open PR at a time: every npm PR edits
+      # pnpm-lock.yaml, so concurrent npm PRs conflict with each other and
+      # each merge to main re-conflicts the rest. A single in-flight PR is
+      # always based on fresh main, which avoids those lockfile conflicts.
       schedule:
-          interval: weekly
-          day: monday
+          interval: daily
       cooldown:
           default-days: 3
-      open-pull-requests-limit: 10
+      open-pull-requests-limit: 1
       labels:
           - dependencies
       ignore:
