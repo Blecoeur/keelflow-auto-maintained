@@ -108,7 +108,7 @@
         "multer": "2.5.0"
     },
     "dependencies": {
-        "@aws-sdk/client-secrets-manager": "^3.1014.0",
+        "@aws-sdk/client-secrets-manager": "^3.1175.0",
         "@bull-board/api": "^6.11.0",
         "@bull-board/express": "^6.11.0",
         "@google-cloud/logging-winston": "^6.0.0",
