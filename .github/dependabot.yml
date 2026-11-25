@@ -32,6 +32,11 @@ updates:
           # majors are deferred by policy in any case
           - dependency-name: '*'
             update-types: ['version-update:semver-major']
+          # @langchain/mistralai 1.2.x imports @langchain/core/utils/uuid,
+          # which only exists from @langchain/core 1.2.0; the repo pins
+          # @langchain/core 1.1.20 via pnpm overrides (see PR #38).
+          - dependency-name: '@langchain/mistralai'
+            update-types: ['version-update:semver-minor']
 
     - package-ecosystem: github-actions
       directory: '/'
