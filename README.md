@@ -38,6 +38,20 @@ verify the `autorepo/validation` status on the Dependabot head and that
 branch protection enforces fresh validation. Without the variable, ordinary
 PR CI remains active. The weekly maintenance release schedule is disabled.
 
+### Vibe repair proposals
+
+The **Propose an Autorepo repair** workflow accepts a reproduced dependency
+incompatibility, the matching failed validation run, the exact Dependabot
+head, and selected application source paths. A successful proposal produces
+a patch with provenance and token usage. Review the patch and open a repair
+PR for ordinary Keelflow CI.
+
+Enable `AUTOREPO_REPAIR_ENABLED=true` after the upstream Linux isolation
+test passes. Configure a dedicated `MISTRAL_API_KEY` in the
+`autorepo-repair` Actions environment. The repair workflow has read-only
+GitHub permissions.
+
+
 ---
 
 Flowise was archived on August 13, 2026 and reached end of life on August 31. Security advisories kept being published after that without fixes, and thousands of instances are still reachable from the internet.
