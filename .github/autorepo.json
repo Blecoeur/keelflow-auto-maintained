@@ -12,5 +12,40 @@
     "max_attempts": 2,
     "update_timeout_minutes": 60,
     "pause_for_critical": false,
-    "publish_status": true
+    "publish_status": true,
+    "repair": {
+        "workflow": "autorepo-repair.yml",
+        "rules": [
+            {
+                "job": "dependency-audit",
+                "step": "Scan locked dependencies",
+                "paths": "package.json pnpm-lock.yaml",
+                "diagnosis": "pnpm audit on the candidate lockfile reports new vulnerable dependency paths introduced by the update (GHSA advisory paths present on the PR head but absent from the base lockfile). Select a dependency version that keeps the update without introducing new advisory paths."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm install --frozen-lockfile",
+                "paths": "package.json pnpm-lock.yaml",
+                "diagnosis": "pnpm install --frozen-lockfile fails on the candidate head because the updated dependency range no longer matches pnpm-lock.yaml. Align the manifest and lockfile to a compatible, installable version."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm lint",
+                "paths": "packages package.json pnpm-lock.yaml turbo.json",
+                "diagnosis": "pnpm lint fails on the candidate head after the dependency update (reproduced lint errors from changed dependency types or APIs). Fix call sites and configuration without weakening lint rules."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm build",
+                "paths": "packages package.json pnpm-lock.yaml turbo.json",
+                "diagnosis": "pnpm build fails on the candidate head after the dependency update (reproduced build error). Adapt configuration and call sites to the updated dependency API while preserving public behavior."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm test",
+                "paths": "packages package.json pnpm-lock.yaml",
+                "diagnosis": "pnpm test fails on the candidate head after the dependency update (reproduced failing unit tests). Update call sites and expectations to the new dependency behavior without removing coverage."
+            }
+        ]
+    }
 }
