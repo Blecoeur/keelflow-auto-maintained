@@ -46,7 +46,7 @@ jobs:
             contents: read
             pull-requests: read
         steps:
-            - uses: Blecoeur/autorepo/validate@c820141132f154a0d74936eb3c34fc91a315949e
+            - uses: Blecoeur/autorepo/validate@99dc08e5eeb8c13b74c21d102d4cc3ae0793a25e
               with:
                   branch: main
                   pr: ${{ inputs.pr }}
