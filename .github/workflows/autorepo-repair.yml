@@ -55,7 +55,9 @@ jobs:
                   paths: ${{ inputs.paths }}
                   diagnosis: ${{ inputs.diagnosis }}
                   confirmed: ${{ inputs.confirmed }}
-                  repairable-jobs: Lint, build and unit tests
+                  repairable-jobs: |
+                      Lint, build and unit tests
+                      dependency-audit
                   api-key: ${{ secrets.MISTRAL_API_KEY }}
             - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
               with:
