@@ -1,17 +1,35 @@
 name: CI
+run-name: >-
+    ${{ inputs.pr != '' && format('Autorepo #{0} {1} {2} {3}', inputs.pr, inputs.head, inputs.base, inputs.key) || github.event.head_commit.message || github.event.pull_request.title || 'CI' }}
 
 on:
     push:
         branches: [main]
     pull_request:
     workflow_dispatch:
+        inputs:
+            pr:
+                description: Dependabot pull request number
+                type: string
+            head:
+                description: Exact candidate commit
+                type: string
+            base:
+                description: Exact base commit
+                type: string
+            advisories:
+                description: Advisory IDs to verify
+                type: string
+            key:
+                description: Validation key
+                type: string
 
 permissions:
     contents: read
 
 concurrency:
-    group: ci-${{ github.ref }}
-    cancel-in-progress: true
+    group: ${{ inputs.pr != '' && 'autorepo-validation' || format('ci-{0}', github.ref) }}
+    cancel-in-progress: ${{ inputs.pr == '' }}
 
 env:
     PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -20,27 +38,96 @@ env:
     TURBO_TELEMETRY_DISABLED: '1'
 
 jobs:
+    validation-request:
+        if: github.event_name == 'workflow_dispatch' && inputs.pr != ''
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        permissions:
+            contents: read
+            pull-requests: read
+        steps:
+            - uses: Blecoeur/autorepo/validate@3f1a940fb283e07e1f0933419d00346b7026b784
+              with:
+                  branch: main
+                  pr: ${{ inputs.pr }}
+                  head: ${{ inputs.head }}
+                  base: ${{ inputs.base }}
+                  advisories: ${{ inputs.advisories }}
+                  key: ${{ inputs.key }}
+            - name: Verify validation scripts are unchanged
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  BASE_SHA: ${{ inputs.base }}
+                  HEAD_SHA: ${{ inputs.head }}
+              run: |
+                  gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA?per_page=1" |
+                    jq -e '.files | length > 0 and length < 300 and all(.[];
+                      ([.filename, .previous_filename // ""] | all(.[];
+                        (startswith(".github/") or startswith(".husky/") or
+                        test("(^|/)(test|tests|__tests__)/|\\.(spec|test)\\.")) | not)))'
+
+    dependency-audit:
+        if: needs.validation-request.result == 'success'
+        needs: validation-request
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.base }}
+                  persist-credentials: false
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head }}
+                  path: candidate
+                  persist-credentials: false
+            - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+              with:
+                  version: 11.28.13
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+              with:
+                  node-version: 26
+                  package-manager-cache: false
+            - name: Scan locked dependencies
+              env:
+                  ADVISORIES: ${{ inputs.advisories }}
+              run: python3 .github/scripts/audit_dependencies.py "$GITHUB_WORKSPACE/candidate"
+
     build:
+        needs: validation-request
+        if: >-
+            ${{ !cancelled() && (
+              (inputs.pr != '' && needs.validation-request.result == 'success') ||
+              (inputs.pr == '' && (
+                github.event_name != 'pull_request' || vars.AUTOREPO_ON_DEMAND != 'true' ||
+                github.event.pull_request.user.id != 49699333 ||
+                github.event.pull_request.head.repo.full_name != github.repository ||
+                startsWith(github.event.pull_request.head.ref, 'dependabot/github_actions/')
+              ))
+            ) }}
         name: Lint, build and unit tests
         runs-on: ubuntu-latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v7
-            - uses: pnpm/action-setup@v6
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
+            - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
               with:
                   version: 10.26.0
-            - uses: actions/setup-node@v7
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
               with:
                   node-version: 24
-                  cache: pnpm
-                  cache-dependency-path: pnpm-lock.yaml
+                  cache: ${{ inputs.pr == '' && 'pnpm' || '' }}
+                  package-manager-cache: ${{ inputs.pr == '' }}
             - run: pnpm install --frozen-lockfile
             - run: pnpm lint
             - run: pnpm build
               env:
                   NODE_OPTIONS: --max-old-space-size=6144
             - run: pnpm test
-            - uses: actions/upload-artifact@v7
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
               with:
                   name: build
                   retention-days: 3
@@ -55,9 +142,13 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - uses: ./.github/actions/e2e
               with:
+                  cache: ${{ inputs.pr == '' }}
                   command: node test/auth-flow.mjs http://localhost:3000
 
     e2e-postgres:
@@ -82,9 +173,13 @@ jobs:
             DATABASE_PASSWORD: keelflow
             DATABASE_NAME: keelflow
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - uses: ./.github/actions/e2e
               with:
+                  cache: ${{ inputs.pr == '' }}
                   command: node test/auth-flow.mjs http://localhost:3000
 
     e2e-mysql:
@@ -110,9 +205,13 @@ jobs:
             DATABASE_PASSWORD: keelflow
             DATABASE_NAME: keelflow
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - uses: ./.github/actions/e2e
               with:
+                  cache: ${{ inputs.pr == '' }}
                   command: node test/auth-flow.mjs http://localhost:3000
 
     e2e-mariadb:
@@ -138,9 +237,13 @@ jobs:
             DATABASE_PASSWORD: keelflow
             DATABASE_NAME: keelflow
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - uses: ./.github/actions/e2e
               with:
+                  cache: ${{ inputs.pr == '' }}
                   command: node test/auth-flow.mjs http://localhost:3000
 
     upgrade-from-flowise:
@@ -149,23 +252,26 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - name: Fetch flowise@3.1.4 and build a database with its migrations
               run: |
                   mkdir -p "$RUNNER_TEMP/flowise"
                   cd "$RUNNER_TEMP/flowise"
                   npm pack flowise@3.1.4 --silent
                   tar xzf flowise-3.1.4.tgz
-            - uses: pnpm/action-setup@v6
+            - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
               with:
                   version: 10.26.0
-            - uses: actions/setup-node@v7
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
               with:
                   node-version: 24
-                  cache: pnpm
-                  cache-dependency-path: pnpm-lock.yaml
+                  cache: ${{ inputs.pr == '' && 'pnpm' || '' }}
+                  package-manager-cache: ${{ inputs.pr == '' }}
             - run: pnpm install --frozen-lockfile
-            - uses: actions/download-artifact@v8
+            - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
               with:
                   name: build
                   path: packages
@@ -184,11 +290,14 @@ jobs:
 
     docker:
         name: Docker image builds and starts
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && inputs.pr == ''
         runs-on: ubuntu-latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v7
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ inputs.head || github.sha }}
+                  persist-credentials: false
             - run: docker build -t keelflow:ci .
             - name: Start the image and wait for the API
               run: |

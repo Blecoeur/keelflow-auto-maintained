@@ -1,45 +1,36 @@
-# Dependabot configuration for the Keelflow demonstrator.
-#
-# Policy (per the autonomous-dependency-maintainer framework):
-# - weekly scan on Monday, explicit 3-day cooldown
-# - one PR per dependency (no giant grouped updates)
-# - ordinary MAJOR updates ignored: migrate majors only through the
-#   audit circuit, with verifiable justification
-# - github-actions updates are infrastructure changes: the policy check
-#   surfaces them as needs-human (green, never auto-merged); they are
-#   merged by human decision only.
-#
-# Re-registered 2026-11-24: version updates had been auto-deactivated
-# after repeated update-job failures (Dependabot lockfiles dropping the
-# pnpm overrides section). Any push to this file re-registers the
-# config and schedules a fresh check. Stall detection:
-# .github/workflows/dependabot-watchdog.yml
-
 version: 2
 updates:
     - package-ecosystem: npm
       directory: '/'
-      # Daily scan + one open PR at a time: every npm PR edits
-      # pnpm-lock.yaml, so concurrent npm PRs conflict with each other and
-      # each merge to main re-conflicts the rest. A single in-flight PR is
-      # always based on fresh main, which avoids those lockfile conflicts.
       schedule:
-          interval: daily
+          interval: weekly
+          day: monday
       cooldown:
-          default-days: 3
-      open-pull-requests-limit: 1
-      labels:
-          - dependencies
+          default-days: 1
+      rebase-strategy: disabled
+      open-pull-requests-limit: 5
       ignore:
-          # major versions of LangChain, the AI SDKs and React change APIs;
-          # majors are deferred by policy in any case
           - dependency-name: '*'
             update-types: ['version-update:semver-major']
-          # @langchain/mistralai 1.2.x imports @langchain/core/utils/uuid,
-          # which only exists from @langchain/core 1.2.0; the repo pins
-          # @langchain/core 1.1.20 via pnpm overrides (see PR #38).
+          # @langchain/mistralai 1.2.x requires @langchain/core >= 1.2.
           - dependency-name: '@langchain/mistralai'
             update-types: ['version-update:semver-minor']
+      groups:
+          security:
+              applies-to: security-updates
+              patterns: ['*']
+          production-patch:
+              applies-to: version-updates
+              dependency-type: production
+              update-types: [patch]
+          production-minor:
+              applies-to: version-updates
+              dependency-type: production
+              update-types: [minor]
+          development:
+              applies-to: version-updates
+              dependency-type: development
+              update-types: [patch, minor]
 
     - package-ecosystem: github-actions
       directory: '/'
@@ -47,7 +38,34 @@ updates:
           interval: weekly
           day: monday
       cooldown:
-          default-days: 3
-      labels:
-          - dependencies
-          - infrastructure
+          default-days: 1
+      ignore:
+          - dependency-name: '*'
+            update-types: ['version-update:semver-major']
+      groups:
+          security:
+              applies-to: security-updates
+              patterns: ['*']
+          actions:
+              applies-to: version-updates
+              patterns: ['*']
+              update-types: [patch, minor]
+
+    - package-ecosystem: docker
+      directories: ['/', '/docker']
+      schedule:
+          interval: weekly
+          day: monday
+      cooldown:
+          default-days: 1
+      ignore:
+          - dependency-name: '*'
+            update-types: ['version-update:semver-major']
+      groups:
+          security:
+              applies-to: security-updates
+              patterns: ['*']
+          docker:
+              applies-to: version-updates
+              patterns: ['*']
+              update-types: [patch, minor]

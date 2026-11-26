@@ -16,17 +16,26 @@
 <p align="center">English · <a href="README.ru.md">Русский</a></p>
 
 > [!WARNING]
-> **Experimental, automatically maintained distribution.** This fork of
-> [Keelflow](https://github.com/Perruer/keelflow) is maintained by the
-> [autonomous-dependency-maintainer](https://github.com/Blecoeur/autonomous-dependency-maintainer)
-> framework: dependencies are updated automatically (weekly Dependabot scan,
-> 3-day cooldown, eligible pull requests auto-merged when all required checks
-> pass), and later phases may include AI-generated compatibility fixes.
-> All changes are checked by an automated CI pipeline, but passing tests do
-> not guarantee functional compatibility, reliability, or security. There is
-> **no human review requirement** for eligible automated updates. No warranty
-> or support commitment is provided. Production users should pin versions,
-> keep backups and independently validate releases.
+> **Experimental maintenance fork.** [Autorepo](https://github.com/Blecoeur/autorepo)
+> schedules Dependabot updates and runs Keelflow's existing CI on the selected
+> revision. Maintainers review and merge updates. The integration starts in
+> manual mode, with on-demand scheduling available after branch protection
+> and a live validation run have been verified.
+> Production users should pin versions, keep backups and independently
+> validate releases.
+
+The Autorepo workflow can be dispatched manually from the **Actions** tab.
+Verify a baseline run on `main`, then run Autorepo on an open Dependabot PR.
+A repository-scoped GitHub App with read access to Dependabot alerts enables
+security prioritization. Configure `AUTOREPO_ALERTS_APP_CLIENT_ID` and
+`AUTOREPO_ALERTS_APP_PRIVATE_KEY` with the App client ID and private key.
+
+Confirm which checks protect `main` and disable any native auto-merge already
+armed by the previous workflow. When enabling `AUTOREPO_ON_DEMAND=true`,
+verify the `autorepo/validation` status on the Dependabot head and that
+branch protection enforces fresh validation. Without the variable, ordinary
+PR CI remains active and Autorepo runs on manual dispatch only. The weekly
+maintenance release schedule is disabled.
 
 ---
 
