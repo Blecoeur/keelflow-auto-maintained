@@ -1,5 +1,6 @@
 {
     "enabled": true,
+    "allow_bash": true,
     "model": "zai-glm-latest",
     "allowed_paths": [
         "packages/server/src/*.ts",
