@@ -16,17 +16,41 @@
 <p align="center">English · <a href="README.ru.md">Русский</a></p>
 
 > [!WARNING]
-> **Experimental, automatically maintained distribution.** This fork of
-> [Keelflow](https://github.com/Perruer/keelflow) is maintained by the
-> [autonomous-dependency-maintainer](https://github.com/Blecoeur/autonomous-dependency-maintainer)
-> framework: dependencies are updated automatically (weekly Dependabot scan,
-> 3-day cooldown, eligible pull requests auto-merged when all required checks
-> pass), and later phases may include AI-generated compatibility fixes.
-> All changes are checked by an automated CI pipeline, but passing tests do
-> not guarantee functional compatibility, reliability, or security. There is
-> **no human review requirement** for eligible automated updates. No warranty
-> or support commitment is provided. Production users should pin versions,
-> keep backups and independently validate releases.
+> **Experimental maintenance fork.** [Autorepo](https://github.com/Blecoeur/autorepo)
+> schedules Dependabot updates and runs Keelflow's existing CI on the selected
+> revision. Maintainers review and merge updates. Ordinary pull request
+> CI remains active.
+> Production users should pin versions, keep backups and independently
+> validate releases.
+
+Autorepo reconciles on Dependabot PR activity, CI completion, updates to
+`main`, and a 15-minute schedule. Set the repository variable
+`AUTOREPO_AUTOMATIC=false` to pause automatic runs. Manual dispatch stays
+available from the **Actions** tab.
+
+A repository-scoped GitHub App with read access to Dependabot alerts enables
+security prioritization. Configure `AUTOREPO_ALERTS_APP_CLIENT_ID` and
+`AUTOREPO_ALERTS_APP_PRIVATE_KEY` with the App client ID and private key.
+
+Confirm which checks protect `main` and disable any native auto-merge already
+armed by the previous workflow. When enabling `AUTOREPO_ON_DEMAND=true`,
+verify the `autorepo/validation` status on the Dependabot head and that
+branch protection enforces fresh validation. Without the variable, ordinary
+PR CI remains active. The weekly maintenance release schedule is disabled.
+
+### Vibe repair proposals
+
+The **Propose an Autorepo repair** workflow accepts a reproduced dependency
+incompatibility, the matching failed validation run, the exact Dependabot
+head, and selected application source paths. A successful proposal produces
+a patch with provenance and token usage. Review the patch and open a repair
+PR for ordinary Keelflow CI.
+
+Enable `AUTOREPO_REPAIR_ENABLED=true` after the upstream Linux isolation
+test passes. Configure a dedicated `MISTRAL_API_KEY` in the
+`autorepo-repair` Actions environment. The repair workflow has read-only
+GitHub permissions.
+
 
 ---
 
