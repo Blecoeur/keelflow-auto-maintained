@@ -1,6 +1,6 @@
 {
     "enabled": true,
-    "model": "devstral-small-2512",
+    "model": "zai-glm-latest",
     "allowed_paths": [
         "packages/server/src/*.ts",
         "packages/components/src/*.ts",
