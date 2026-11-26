@@ -1636,10 +1636,13 @@ export const decryptCredentialData = async (
             throw new Error('Failed to decrypt credential data.')
         }
     } else {
-        // Fallback to existing code
         const encryptKey = await getEncryptionKey()
-        const decryptedData = AES.decrypt(encryptedData, encryptKey)
-        decryptedDataStr = decryptedData.toString(enc.Utf8)
+        try {
+            const decryptedData = AES.decrypt(encryptedData, encryptKey)
+            decryptedDataStr = decryptedData.toString(enc.Utf8)
+        } catch {
+            return {}
+        }
     }
 
     if (!decryptedDataStr) return {}
