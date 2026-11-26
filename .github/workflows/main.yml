@@ -1,5 +1,6 @@
 name: CI
-run-name: ${{ inputs.pr != '' && format('Autorepo #{0} {1} {2} {3}', inputs.pr, inputs.head, inputs.base, inputs.key) || github.event.head_commit.message || github.event.pull_request.title || 'CI' }}
+run-name: >-
+    ${{ inputs.pr != '' && format('Autorepo #{0} {1} {2} {3}', inputs.pr, inputs.head, inputs.base, inputs.key) || github.event.head_commit.message || github.event.pull_request.title || 'CI' }}
 
 on:
     push:
