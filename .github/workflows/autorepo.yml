@@ -26,7 +26,11 @@ concurrency:
 jobs:
     reconcile:
         if: >-
-            github.event_name == 'workflow_dispatch' || vars.AUTOREPO_ON_DEMAND == 'true'
+            github.event_name == 'workflow_dispatch' ||
+            (vars.AUTOREPO_AUTOMATIC != 'false' &&
+             (github.event_name != 'pull_request_target' ||
+              (github.event.pull_request.user.id == 49699333 &&
+               github.event.pull_request.head.repo.full_name == github.repository)))
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
