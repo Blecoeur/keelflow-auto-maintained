@@ -1,0 +1,18 @@
+{
+    "enabled": true,
+    "model": "zai-glm-latest",
+    "allowed_paths": [
+        "packages/server/src/*.ts",
+        "packages/components/src/*.ts",
+        "packages/components/nodes/*.ts",
+        "packages/ui/src/*.js",
+        "packages/ui/src/*.jsx",
+        "packages/ui/src/*.ts",
+        "packages/ui/src/*.tsx"
+    ],
+    "max_attempts": 2,
+    "max_turns": 2,
+    "max_tokens": 10000,
+    "timeout_seconds": 900,
+    "budget_cents": 300
+}
