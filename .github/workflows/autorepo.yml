@@ -1,0 +1,44 @@
+name: Autorepo
+on:
+    pull_request_target:
+        branches: [main]
+        types: [opened, reopened, synchronize, ready_for_review, closed]
+    workflow_run:
+        workflows: [CI]
+        types: [completed]
+        branches: [main]
+    push:
+        branches: [main]
+    schedule:
+        - cron: '11,26,41,56 * * * *'
+    workflow_dispatch:
+
+permissions:
+    actions: write
+    contents: write
+    pull-requests: write
+    statuses: write
+
+concurrency:
+    group: autorepo-controller
+    cancel-in-progress: false
+
+jobs:
+    reconcile:
+        if: >-
+            github.event_name == 'workflow_dispatch' || vars.AUTOREPO_ON_DEMAND == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Get repository-scoped Dependabot alerts token
+              if: vars.AUTOREPO_ALERTS_APP_CLIENT_ID != ''
+              id: alerts
+              uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+              with:
+                  client-id: ${{ vars.AUTOREPO_ALERTS_APP_CLIENT_ID }}
+                  private-key: ${{ secrets.AUTOREPO_ALERTS_APP_PRIVATE_KEY }}
+                  permission-vulnerability-alerts: read
+            - name: Reconcile maintenance backlog
+              uses: Blecoeur/autorepo@3f1a940fb283e07e1f0933419d00346b7026b784
+              with:
+                  alerts-token: ${{ steps.alerts.outputs.token }}
