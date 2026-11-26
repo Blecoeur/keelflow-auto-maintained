@@ -19,7 +19,7 @@
             {
                 "job": "dependency-audit",
                 "step": "Scan locked dependencies",
-                "paths": "package.json pnpm-lock.yaml",
+                "paths": "package.json packages/components/package.json packages/server/package.json",
                 "diagnosis": "pnpm audit on the candidate lockfile reports new vulnerable dependency paths introduced by the update (GHSA advisory paths present on the PR head but absent from the base lockfile). Select a dependency version that keeps the update without introducing new advisory paths."
             },
             {
