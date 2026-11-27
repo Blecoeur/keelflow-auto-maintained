@@ -157,7 +157,8 @@
             "websocket-driver": "^0.7.5",
             "ws": "8.21.3",
             "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-            "@xmldom/xmldom": "^0.8.15"
+            "@xmldom/xmldom": "^0.8.15",
+            "@opentelemetry/core@1": "1.27.0"
         }
     },
     "engines": {
@@ -172,7 +173,8 @@
         "@qdrant/openapi-typescript-fetch": "1.2.6",
         "openai": "6.19.0",
         "protobufjs": "7.5.5",
-        "uuid": "^10.0.0"
+        "uuid": "^10.0.0",
+        "@opentelemetry/core@1": "1.27.0"
     },
     "eslintIgnore": [
         "**/dist",
