@@ -2,6 +2,7 @@
     "name": "keelflow-monorepo",
     "version": "3.2.1",
     "private": true,
+    "packageManager": "pnpm@10.26.0",
     "description": "Keelflow: build AI agents and LLM workflows visually. Security-maintained continuation of Flowise.",
     "homepage": "https://github.com/Perruer/keelflow",
     "license": "Apache-2.0",
