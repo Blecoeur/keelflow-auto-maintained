@@ -11,8 +11,7 @@
         "**/*.spec.*"
     ],
     "max_attempts": 2,
-    "max_turns": 10,
-    "max_tokens": 16000,
+    "max_tokens": 1048576,
     "timeout_seconds": 1200,
     "budget_cents": 300
 }
