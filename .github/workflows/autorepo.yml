@@ -43,6 +43,6 @@ jobs:
                   private-key: ${{ secrets.AUTOREPO_ALERTS_APP_PRIVATE_KEY }}
                   permission-vulnerability-alerts: read
             - name: Reconcile maintenance backlog
-              uses: Blecoeur/autorepo@5d2e2d525e6c28f35c77a7563af3c2f5629dba38
+              uses: Blecoeur/autorepo@5322c689611e7111bb1a1f304c1a1b31b01a16d2
               with:
                   alerts-token: ${{ steps.alerts.outputs.token }}
