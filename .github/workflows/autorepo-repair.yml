@@ -46,7 +46,7 @@ jobs:
         timeout-minutes: 30
         environment: autorepo-repair
         steps:
-            - uses: Blecoeur/autorepo/repair@fc3c75dece621a88594a100d4676b07d86aa2edf
+            - uses: ./.github/actions/autorepo-repair
               id: repair
               with:
                   pr: ${{ inputs.pr }}
