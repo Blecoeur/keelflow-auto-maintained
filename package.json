@@ -151,7 +151,7 @@
             "underscore": "^1.13.8",
             "undici@7": "^7.29.0",
             "unset-value": "2.0.1",
-            "uuid": "^10.0.0",
+            "uuid": "^14.0.0",
             "validator": "^13.15.22",
             "webpack-dev-middleware": "7.4.2",
             "websocket-driver": "^0.7.5",
@@ -172,7 +172,7 @@
         "@qdrant/openapi-typescript-fetch": "1.2.6",
         "openai": "6.19.0",
         "protobufjs": "7.5.5",
-        "uuid": "^10.0.0"
+        "uuid": "^14.0.0"
     },
     "eslintIgnore": [
         "**/dist",
