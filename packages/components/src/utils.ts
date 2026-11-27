@@ -630,10 +630,16 @@ export const decryptCredentialData = async (encryptedData: string): Promise<ICom
             throw new Error('Failed to decrypt credential data.')
         }
     } else {
-        // Fallback to existing code
+        // Fallback to existing code. A ciphertext that does not carry an
+        // OpenSSL salt header yields a random key, so decoding undecryptable
+        // input can produce invalid UTF-8; treat it as absent credentials.
         const encryptKey = await getEncryptionKey()
-        const decryptedData = AES.decrypt(encryptedData, encryptKey)
-        decryptedDataStr = decryptedData.toString(enc.Utf8)
+        try {
+            const decryptedData = AES.decrypt(encryptedData, encryptKey)
+            decryptedDataStr = decryptedData.toString(enc.Utf8)
+        } catch {
+            return {}
+        }
     }
 
     if (!decryptedDataStr) return {}
