@@ -49,7 +49,7 @@ jobs:
             VIBE_SYSTEM_PROMPT_ID: minimal
             VIBE_DISABLED_TOOLS: '["web_search","web_fetch","task","skill","todo","ask_user_question","git_bash","experimental_bash","windows_shell"]'
         steps:
-            - uses: Blecoeur/autorepo/repair@c05ed4b21bd1073c28d911a80189ac81ed69513d
+            - uses: Blecoeur/autorepo/repair@5322c689611e7111bb1a1f304c1a1b31b01a16d2
               id: repair
               with:
                   pr: ${{ inputs.pr }}
