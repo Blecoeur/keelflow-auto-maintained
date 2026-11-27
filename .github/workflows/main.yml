@@ -313,3 +313,16 @@ jobs:
                   done
                   docker logs keelflow
                   exit 1
+
+    notify-autorepo:
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.pr != '' }}
+        needs: [validation-request, dependency-audit, build, e2e-sqlite, e2e-postgres, e2e-mysql, e2e-mariadb, upgrade-from-flowise, docker]
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+        permissions:
+            actions: write
+        steps:
+            - name: Ask Autorepo to reconcile
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh workflow run Autorepo --ref main
