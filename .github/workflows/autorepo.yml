@@ -4,7 +4,7 @@ on:
         branches: [main]
         types: [opened, reopened, synchronize, ready_for_review, closed]
     workflow_run:
-        workflows: [CI]
+        workflows: [CI, Propose an Autorepo repair]
         types: [completed]
         branches: [main]
     push:
