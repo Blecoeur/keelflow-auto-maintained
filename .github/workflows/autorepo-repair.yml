@@ -45,6 +45,9 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         environment: autorepo-repair
+        env:
+            VIBE_SYSTEM_PROMPT_ID: minimal
+            VIBE_DISABLED_TOOLS: '["web_search","web_fetch","task","skill","todo","ask_user_question","git_bash","experimental_bash","windows_shell"]'
         steps:
             - uses: Blecoeur/autorepo/repair@6cb422d6658bce8fe4c0eac38f63612aae2ef580
               id: repair
