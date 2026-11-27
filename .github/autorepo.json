@@ -1,0 +1,51 @@
+{
+    "branch": "main",
+    "validation_workflow": "main.yml",
+    "version_groups": {
+        "production-patch": 4,
+        "production-minor": 5,
+        "development": 6,
+        "actions": 6,
+        "docker": 6
+    },
+    "retry_minutes": 15,
+    "max_attempts": 2,
+    "update_timeout_minutes": 60,
+    "pause_for_critical": false,
+    "publish_status": true,
+    "repair": {
+        "workflow": "autorepo-repair.yml",
+        "rules": [
+            {
+                "job": "dependency-audit",
+                "step": "Scan locked dependencies",
+                "paths": "package.json packages/components/package.json packages/server/package.json",
+                "diagnosis": "pnpm audit on the candidate lockfile reports new vulnerable dependency paths introduced by the update (GHSA advisory paths present on the PR head but absent from the base lockfile). Select a dependency version that keeps the update without introducing new advisory paths. The run has a tight cumulative token budget: do not read files larger than 100 KB (pnpm-lock.yaml is about 1.5 MB), do not run repo-wide searches, and do not read the lockfile; work only from the dependency diff in this prompt and the hinted package manifests, then regenerate the lockfile with pnpm if needed."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm install --frozen-lockfile",
+                "paths": "package.json pnpm-lock.yaml",
+                "diagnosis": "pnpm install --frozen-lockfile fails on the candidate head because the updated dependency range no longer matches pnpm-lock.yaml. Align the manifest and lockfile to a compatible, installable version. The run has a tight cumulative token budget: do not read files larger than 100 KB (pnpm-lock.yaml is about 1.5 MB) and avoid repo-wide searches; work only from the dependency diff in this prompt and the hinted manifests."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm lint",
+                "paths": "packages package.json pnpm-lock.yaml turbo.json",
+                "diagnosis": "pnpm lint fails on the candidate head after the dependency update (reproduced lint errors from changed dependency types or APIs). Fix call sites and configuration without weakening lint rules. The run has a tight cumulative token budget: do not read files larger than 100 KB (pnpm-lock.yaml is about 1.5 MB) and avoid repo-wide searches; read only the small source files named in the CI log."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm build",
+                "paths": "packages package.json pnpm-lock.yaml turbo.json",
+                "diagnosis": "pnpm build fails on the candidate head after the dependency update (reproduced build error). Adapt configuration and call sites to the updated dependency API while preserving public behavior. The run has a tight cumulative token budget: do not read files larger than 100 KB (pnpm-lock.yaml is about 1.5 MB) and avoid repo-wide searches; read only the small source files named in the CI log."
+            },
+            {
+                "job": "Lint, build and unit tests",
+                "step": "Run pnpm test",
+                "paths": "packages package.json pnpm-lock.yaml",
+                "diagnosis": "pnpm test fails on the candidate head after the dependency update (reproduced failing unit tests). Update call sites and expectations to the new dependency behavior without removing coverage. The run has a tight cumulative token budget: do not read files larger than 100 KB (pnpm-lock.yaml is about 1.5 MB) and avoid repo-wide searches; read only the small source files named in the CI log."
+            }
+        ]
+    }
+}
