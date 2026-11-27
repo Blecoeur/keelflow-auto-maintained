@@ -120,5 +120,3 @@ apps/*/
 .claude/settings.local.json
 .claude/agent-memory/*
 
-__pycache__/
-*.pyc
