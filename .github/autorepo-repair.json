@@ -1,0 +1,17 @@
+{
+    "enabled": true,
+    "allow_bash": true,
+    "blocked_paths": [
+        ".github/**",
+        "**/.npmrc",
+        "**/.pnpmfile.*",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/*.test.*",
+        "**/*.spec.*"
+    ],
+    "max_attempts": 2,
+    "max_tokens": 1048576,
+    "timeout_seconds": 1200,
+    "budget_cents": 300
+}
